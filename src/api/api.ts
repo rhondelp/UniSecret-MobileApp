@@ -1,4 +1,4 @@
-import * as SecureStore from "expo-secure-store";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_URL = "http://192.168.8.112:5277/api/v1";
 
@@ -7,48 +7,54 @@ export const apiRequest = async (
   options: RequestInit = {}
 ) => {
   try {
-    const token = await SecureStore.getItemAsync("token");
+    // Get saved JWT token
+    const token = await AsyncStorage.getItem("token");
 
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
+      ...(options.headers as Record<string, string> | undefined),
     };
 
-    // Add any custom headers passed to the request
-    if (options.headers) {
-      const customHeaders = new Headers(options.headers);
-
-      customHeaders.forEach((value, key) => {
-        headers[key] = value;
-      });
-    }
-
-    // Add JWT token if available
+    // Add JWT if available
     if (token) {
-      headers["Authorization"] = `Bearer ${token}`;
+      headers.Authorization = `Bearer ${token}`;
     }
 
-    console.log("API Request:", `${API_URL}${endpoint}`);
+    const url = `${API_URL}${endpoint}`;
 
-    const response = await fetch(`${API_URL}${endpoint}`, {
+    console.log("================================");
+    console.log("API REQUEST");
+    console.log("URL:", url);
+    console.log("METHOD:", options.method || "GET");
+    console.log("================================");
+
+    const response = await fetch(url, {
       ...options,
       headers,
     });
 
     const data = await response.json().catch(() => null);
 
-    console.log("API Status:", response.status);
-    console.log("API Response:", data);
+    console.log("API STATUS:", response.status);
+    console.log("API RESPONSE:", data);
 
     if (!response.ok) {
       throw new Error(
         data?.message ||
+          data?.title ||
+          data?.error ||
           `Request failed with status ${response.status}`
       );
     }
 
     return data;
+
   } catch (error) {
-    console.error("API Request Error:", error);
+
+    console.error("================================");
+    console.error("API ERROR");
+    console.error(error);
+    console.error("================================");
 
     throw error;
   }

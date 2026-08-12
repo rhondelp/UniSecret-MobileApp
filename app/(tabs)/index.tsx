@@ -1,253 +1,262 @@
 import React, { useEffect, useState } from "react";
+
 import {
   View,
   Text,
   StyleSheet,
-  ActivityIndicator,
-  FlatList,
+  TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
+
+import { router } from "expo-router";
 
 import { apiRequest } from "../../src/api/api";
 
-type University = {
-  id: number;
-  name: string;
-  domain: string;
-  logoUrl?: string | null;
-  status: string;
-  createdAt: string;
-};
-
-export default function FeedScreen() {
-  const [universities, setUniversities] = useState<University[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default function WelcomeScreen() {
+  const [apiStatus, setApiStatus] = useState<
+    "checking" | "connected" | "failed"
+  >("checking");
 
   useEffect(() => {
-    testApi();
+    checkApi();
   }, []);
 
-  const testApi = async () => {
+  const checkApi = async () => {
     try {
-      setLoading(true);
-      setError(null);
+      await apiRequest("/Universities");
 
-      console.log("Testing UniSecret API...");
+      setApiStatus("connected");
 
-      const data = await apiRequest("/Universities");
-
-      console.log("API Response:", data);
-
-      setUniversities(data);
     } catch (error) {
-      console.error("API Error:", error);
+      console.error(
+        "API Connection Error:",
+        error
+      );
 
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError("Unable to connect to API.");
-      }
-    } finally {
-      setLoading(false);
+      setApiStatus("failed");
     }
   };
 
-  // -------------------------
-  // LOADING
-  // -------------------------
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" />
-
-        <View style={styles.center}>
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>U</Text>
-          </View>
-
-          <Text style={styles.loadingTitle}>
-            UniSecret
-          </Text>
-
-          <Text style={styles.loadingText}>
-            Connecting to API...
-          </Text>
-
-          <ActivityIndicator
-            size="large"
-            style={styles.loader}
-          />
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // -------------------------
-  // ERROR
-  // -------------------------
-
-  if (error) {
-    return (
-      <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="dark-content" />
-
-        <View style={styles.center}>
-
-          <View style={styles.errorCircle}>
-            <Text style={styles.errorIcon}>!</Text>
-          </View>
-
-          <Text style={styles.errorTitle}>
-            API Connection Failed
-          </Text>
-
-          <Text style={styles.errorMessage}>
-            {error}
-          </Text>
-
-          <Text style={styles.errorHelp}>
-            Check that your ASP.NET Core API is running
-            and that your device can access the API.
-          </Text>
-
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // -------------------------
-  // SUCCESS
-  // -------------------------
-
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="#F7F7F8"
+      />
 
       <View style={styles.container}>
 
-        {/* Header */}
+        {/* -------------------------------- */}
+        {/* TOP BRAND */}
+        {/* -------------------------------- */}
 
-        <View style={styles.header}>
+        <View style={styles.topSection}>
 
-          <View>
-            <Text style={styles.brand}>
-              UniSecret
-            </Text>
-
-            <Text style={styles.subtitle}>
-              API Connection Test
+          <View style={styles.logo}>
+            <Text style={styles.logoText}>
+              U
             </Text>
           </View>
 
-          <View style={styles.connectedBadge}>
+          <Text style={styles.brand}>
+            UniSecret
+          </Text>
 
-            <View style={styles.connectedDot} />
-
-            <Text style={styles.connectedText}>
-              Connected
-            </Text>
-
-          </View>
+          <Text style={styles.tagline}>
+            Your campus. Your stories.
+          </Text>
 
         </View>
 
-        {/* Success Card */}
+        {/* -------------------------------- */}
+        {/* MAIN CONTENT */}
+        {/* -------------------------------- */}
 
-        <View style={styles.successCard}>
+        <View style={styles.content}>
 
-          <View style={styles.checkCircle}>
-            <Text style={styles.check}>
-              ✓
-            </Text>
-          </View>
+          <Text style={styles.title}>
+            A space to speak freely.
+          </Text>
 
-          <View style={styles.successContent}>
+          <Text style={styles.description}>
+            Share your thoughts, secrets,
+            stories, and experiences with
+            your university community.
+          </Text>
 
-            <Text style={styles.successTitle}>
-              API Connection Successful
-            </Text>
+          {/* -------------------------------- */}
+          {/* FEATURE CARDS */}
+          {/* -------------------------------- */}
 
-            <Text style={styles.successDescription}>
-              React Native is successfully connected
-              to your UniSecret backend.
-            </Text>
+          <View style={styles.features}>
 
-          </View>
+            <View style={styles.featureCard}>
 
-        </View>
-
-        {/* Universities */}
-
-        <Text style={styles.sectionTitle}>
-          Universities
-        </Text>
-
-        <Text style={styles.sectionSubtitle}>
-          Data retrieved from your API
-        </Text>
-
-        <FlatList
-          data={universities}
-          keyExtractor={(item) =>
-            item.id.toString()
-          }
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.list}
-          renderItem={({ item }) => (
-
-            <View style={styles.card}>
-
-              <View style={styles.universityIcon}>
-                <Text style={styles.universityIconText}>
-                  {item.name.charAt(0).toUpperCase()}
+              <View style={styles.featureIcon}>
+                <Text style={styles.featureIconText}>
+                  🔒
                 </Text>
               </View>
 
-              <View style={styles.universityInfo}>
+              <View style={styles.featureContent}>
 
-                <Text
-                  style={styles.universityName}
-                  numberOfLines={2}
-                >
-                  {item.name}
+                <Text style={styles.featureTitle}>
+                  Anonymous
                 </Text>
 
-                <Text style={styles.domain}>
-                  {item.domain}
-                </Text>
-
-              </View>
-
-              <View style={styles.statusBadge}>
-
-                <Text style={styles.statusText}>
-                  {item.status}
+                <Text style={styles.featureText}>
+                  Share without revealing
+                  your identity.
                 </Text>
 
               </View>
 
             </View>
-          )}
-          ListEmptyComponent={
 
-            <View style={styles.emptyCard}>
+            <View style={styles.featureCard}>
 
-              <Text style={styles.emptyTitle}>
-                No Universities
-              </Text>
+              <View style={styles.featureIcon}>
+                <Text style={styles.featureIconText}>
+                  🎓
+                </Text>
+              </View>
 
-              <Text style={styles.emptyText}>
-                The API is working, but there are
-                currently no universities in the database.
-              </Text>
+              <View style={styles.featureContent}>
+
+                <Text style={styles.featureTitle}>
+                  University Community
+                </Text>
+
+                <Text style={styles.featureText}>
+                  Connect with students
+                  from your university.
+                </Text>
+
+              </View>
 
             </View>
 
-          }
-        />
+            <View style={styles.featureCard}>
+
+              <View style={styles.featureIcon}>
+                <Text style={styles.featureIconText}>
+                  💬
+                </Text>
+              </View>
+
+              <View style={styles.featureContent}>
+
+                <Text style={styles.featureTitle}>
+                  Speak Your Mind
+                </Text>
+
+                <Text style={styles.featureText}>
+                  Share confessions,
+                  opinions, and stories.
+                </Text>
+
+              </View>
+
+            </View>
+
+          </View>
+
+        </View>
+
+        {/* -------------------------------- */}
+        {/* BOTTOM ACTIONS */}
+        {/* -------------------------------- */}
+
+        <View style={styles.bottomSection}>
+
+          {/* SIGN IN */}
+
+          <TouchableOpacity
+            style={styles.loginButton}
+            activeOpacity={0.8}
+            onPress={() =>
+              router.push("/login")
+            }
+          >
+
+            <Text style={styles.loginButtonText}>
+              Sign In
+            </Text>
+
+          </TouchableOpacity>
+
+          {/* REGISTER */}
+
+          <TouchableOpacity
+            style={styles.registerButton}
+            activeOpacity={0.8}
+            onPress={() =>
+              router.push("/register")
+            }
+          >
+
+            <Text style={styles.registerButtonText}>
+              Create an Account
+            </Text>
+
+          </TouchableOpacity>
+
+          {/* API STATUS */}
+
+          <View style={styles.apiStatus}>
+
+            {apiStatus === "checking" && (
+              <>
+                <ActivityIndicator
+                  size="small"
+                  color="#777777"
+                />
+
+                <Text style={styles.apiText}>
+                  Connecting to UniSecret...
+                </Text>
+              </>
+            )}
+
+            {apiStatus === "connected" && (
+              <>
+                <View
+                  style={[
+                    styles.statusDot,
+                    styles.connectedDot,
+                  ]}
+                />
+
+                <Text style={styles.apiText}>
+                  UniSecret is ready
+                </Text>
+              </>
+            )}
+
+            {apiStatus === "failed" && (
+              <>
+                <View
+                  style={[
+                    styles.statusDot,
+                    styles.failedDot,
+                  ]}
+                />
+
+                <Text style={styles.apiText}>
+                  Unable to connect to server
+                </Text>
+              </>
+            )}
+
+          </View>
+
+          <Text style={styles.footer}>
+            UniSecret • Your university community
+          </Text>
+
+        </View>
 
       </View>
     </SafeAreaView>
@@ -256,9 +265,9 @@ export default function FeedScreen() {
 
 const styles = StyleSheet.create({
 
-  // -------------------------
+  // --------------------------------
   // GENERAL
-  // -------------------------
+  // --------------------------------
 
   safeArea: {
     flex: 1,
@@ -267,295 +276,206 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: 24,
+    paddingVertical: 20,
+    justifyContent: "space-between",
   },
 
-  center: {
-    flex: 1,
-    justifyContent: "center",
+  // --------------------------------
+  // BRAND
+  // --------------------------------
+
+  topSection: {
     alignItems: "center",
-    paddingHorizontal: 30,
-    backgroundColor: "#F7F7F8",
+    paddingTop: 10,
   },
-
-  // -------------------------
-  // LOGO
-  // -------------------------
 
   logo: {
-    width: 70,
-    height: 70,
-    borderRadius: 20,
+    width: 72,
+    height: 72,
+    borderRadius: 22,
     backgroundColor: "#111111",
-    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 18,
+    justifyContent: "center",
+    marginBottom: 14,
   },
 
   logoText: {
     color: "#FFFFFF",
-    fontSize: 34,
+    fontSize: 38,
     fontWeight: "800",
-  },
-
-  loadingTitle: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#111111",
-  },
-
-  loadingText: {
-    marginTop: 8,
-    color: "#777777",
-    fontSize: 15,
-  },
-
-  loader: {
-    marginTop: 20,
-  },
-
-  // -------------------------
-  // HEADER
-  // -------------------------
-
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingTop: 20,
-    paddingBottom: 24,
   },
 
   brand: {
-    fontSize: 28,
-    fontWeight: "800",
     color: "#111111",
+    fontSize: 30,
+    fontWeight: "800",
   },
 
-  subtitle: {
-    marginTop: 3,
-    fontSize: 13,
+  tagline: {
     color: "#777777",
+    fontSize: 14,
+    marginTop: 5,
   },
 
-  connectedBadge: {
-    flexDirection: "row",
-    alignItems: "center",
+  // --------------------------------
+  // MAIN CONTENT
+  // --------------------------------
+
+  content: {
+    width: "100%",
+    maxWidth: 500,
+    alignSelf: "center",
+  },
+
+  title: {
+    color: "#111111",
+    fontSize: 30,
+    lineHeight: 36,
+    fontWeight: "800",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+
+  description: {
+    color: "#777777",
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: "center",
     paddingHorizontal: 10,
-    paddingVertical: 7,
-    borderRadius: 20,
-    backgroundColor: "#E9F9F0",
+    marginBottom: 25,
   },
 
-  connectedDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 10,
-    backgroundColor: "#16A34A",
-    marginRight: 6,
+  // --------------------------------
+  // FEATURES
+  // --------------------------------
+
+  features: {
+    gap: 10,
   },
 
-  connectedText: {
-    color: "#15803D",
-    fontSize: 12,
-    fontWeight: "700",
-  },
-
-  // -------------------------
-  // SUCCESS
-  // -------------------------
-
-  successCard: {
-    flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "#E8E8E8",
-    marginBottom: 30,
-  },
-
-  checkCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "#E9F9F0",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 14,
-  },
-
-  check: {
-    color: "#16A34A",
-    fontSize: 23,
-    fontWeight: "800",
-  },
-
-  successContent: {
-    flex: 1,
-  },
-
-  successTitle: {
-    color: "#111111",
-    fontSize: 16,
-    fontWeight: "700",
-    marginBottom: 5,
-  },
-
-  successDescription: {
-    color: "#777777",
-    fontSize: 13,
-    lineHeight: 19,
-  },
-
-  // -------------------------
-  // SECTION
-  // -------------------------
-
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: "800",
-    color: "#111111",
-  },
-
-  sectionSubtitle: {
-    marginTop: 4,
-    marginBottom: 15,
-    fontSize: 13,
-    color: "#777777",
-  },
-
-  list: {
-    paddingBottom: 30,
-  },
-
-  // -------------------------
-  // UNIVERSITY CARD
-  // -------------------------
-
-  card: {
+  featureCard: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
-    padding: 14,
-    marginBottom: 12,
+    padding: 13,
     borderWidth: 1,
     borderColor: "#E8E8E8",
   },
 
-  universityIcon: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: "#111111",
+  featureIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 13,
+    backgroundColor: "#F1F1F1",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
   },
 
-  universityIconText: {
-    color: "#FFFFFF",
+  featureIconText: {
     fontSize: 20,
-    fontWeight: "800",
   },
 
-  universityInfo: {
+  featureContent: {
     flex: 1,
   },
 
-  universityName: {
+  featureTitle: {
     color: "#111111",
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "700",
-    marginBottom: 4,
+    marginBottom: 3,
   },
 
-  domain: {
+  featureText: {
     color: "#777777",
-    fontSize: 13,
+    fontSize: 12,
+    lineHeight: 17,
   },
 
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 5,
-    borderRadius: 8,
-    backgroundColor: "#E9F9F0",
-    marginLeft: 8,
+  // --------------------------------
+  // BOTTOM
+  // --------------------------------
+
+  bottomSection: {
+    width: "100%",
+    maxWidth: 500,
+    alignSelf: "center",
   },
 
-  statusText: {
-    color: "#15803D",
-    fontSize: 10,
+  loginButton: {
+    height: 54,
+    borderRadius: 14,
+    backgroundColor: "#111111",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+  },
+
+  loginButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
     fontWeight: "700",
   },
 
-  // -------------------------
-  // EMPTY
-  // -------------------------
-
-  emptyCard: {
-    padding: 25,
-    borderRadius: 16,
+  registerButton: {
+    height: 54,
+    borderRadius: 14,
     backgroundColor: "#FFFFFF",
     borderWidth: 1,
-    borderColor: "#E8E8E8",
+    borderColor: "#111111",
     alignItems: "center",
+    justifyContent: "center",
   },
 
-  emptyTitle: {
+  registerButtonText: {
     color: "#111111",
     fontSize: 16,
     fontWeight: "700",
   },
 
-  emptyText: {
-    color: "#777777",
-    fontSize: 13,
-    lineHeight: 19,
-    textAlign: "center",
-    marginTop: 7,
-  },
+  // --------------------------------
+  // API STATUS
+  // --------------------------------
 
-  // -------------------------
-  // ERROR
-  // -------------------------
-
-  errorCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "#FEECEC",
+  apiStatus: {
+    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 15,
+    marginTop: 14,
   },
 
-  errorIcon: {
-    fontSize: 30,
-    fontWeight: "800",
-    color: "#DC2626",
+  statusDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 10,
+    marginRight: 6,
   },
 
-  errorTitle: {
-    color: "#111111",
-    fontSize: 24,
-    fontWeight: "800",
-    marginBottom: 10,
+  connectedDot: {
+    backgroundColor: "#16A34A",
   },
 
-  errorMessage: {
-    color: "#DC2626",
-    fontSize: 14,
+  failedDot: {
+    backgroundColor: "#DC2626",
+  },
+
+  apiText: {
+    color: "#888888",
+    fontSize: 11,
+  },
+
+  // --------------------------------
+  // FOOTER
+  // --------------------------------
+
+  footer: {
+    color: "#AAAAAA",
+    fontSize: 10,
     textAlign: "center",
-    marginBottom: 12,
-  },
-
-  errorHelp: {
-    color: "#777777",
-    fontSize: 13,
-    lineHeight: 19,
-    textAlign: "center",
+    marginTop: 10,
   },
 
 });
