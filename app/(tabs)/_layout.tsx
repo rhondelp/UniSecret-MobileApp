@@ -1,35 +1,63 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
+import React from "react";
 
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Tabs } from "expo-router";
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+export default function TabsLayout() {
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+
+        tabBarActiveTintColor: "#111111",
+        tabBarInactiveTintColor: "#999999",
+
+        tabBarStyle: {
+          height: 65,
+          paddingBottom: 8,
+          paddingTop: 8,
+          borderTopColor: "#E5E5E5",
+          backgroundColor: "#FFFFFF",
+        },
+      }}
+    >
+
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: "Home",
+
+          tabBarIcon: () => null,
         }}
       />
+
       <Tabs.Screen
-        name="explore"
+        name="create"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: "Create",
+
+          tabBarIcon: () => null,
         }}
       />
+
+      <Tabs.Screen
+        name="notifications"
+        options={{
+          title: "Notifications",
+
+          tabBarIcon: () => null,
+        }}
+      />
+
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Profile",
+
+          tabBarIcon: () => null,
+        }}
+      />
+
     </Tabs>
   );
 }
