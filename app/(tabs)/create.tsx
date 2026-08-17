@@ -10,16 +10,48 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  FlatList,
 } from "react-native";
 import { router } from "expo-router";
-import { createConfession } from "../../src/api/confessionApi";
+import { createConfession, searchUsers, UserMention } from "../../src/api/confessionApi";
 import { useAuth } from "../../context/AuthContext";
 
 export default function CreateConfessionScreen() {
+  const [imageUrl, setImageUrl] = useState("");
+  const [mentionQuery, setMentionQuery] = useState("");
+  const [userSuggestions, setUserSuggestions] = useState<UserMention[]>([]);
   const [body, setBody] = useState("");
   const [anonymous, setAnonymous] = useState(true);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
+
+  const handleBodyChange = async (text: string) => {
+    setBody(text);
+    const match = text.match(/@([a-zA-Z0-9_]*)$/);
+    if (match) {
+      const q = match[1];
+      setMentionQuery(q);
+      if (q.length > 0) {
+        try {
+          const results = await searchUsers(q);
+          setUserSuggestions(results);
+        } catch (error) {
+          console.error("User search error:", error);
+          setUserSuggestions([]);
+        }
+      } else {
+        setUserSuggestions([]);
+      }
+    } else {
+      setUserSuggestions([]);
+    }
+  };
+
+  const insertMention = (username: string) => {
+    const updated = body.replace(/@([a-zA-Z0-9_]*)$/, `@${username} `);
+    setBody(updated);
+    setUserSuggestions([]);
+  };
 
   const submitConfession = async () => {
     if (!body.trim()) {
@@ -81,16 +113,38 @@ export default function CreateConfessionScreen() {
           Share something with your university community.
         </Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="What's on your mind?"
-          placeholderTextColor="#999999"
-          multiline
-          textAlignVertical="top"
-          value={body}
-          onChangeText={setBody}
-          maxLength={2000}
-        />
+        <View>
+          <TextInput
+            style={styles.input}
+            placeholder="What's on your mind? Type @ to mention users..."
+            placeholderTextColor="#999999"
+            multiline
+            textAlignVertical="top"
+            value={body}
+            onChangeText={handleBodyChange}
+            maxLength={2000}
+          />
+
+          {/* MENTION AUTOCOMPLETE DROPDOWN */}
+          {userSuggestions.length > 0 && (
+            <View style={styles.suggestionsContainer}>
+              <FlatList
+                data={userSuggestions}
+                keyExtractor={(item) => item.id.toString()}
+                keyboardShouldPersistTaps="handled"
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.suggestionRow}
+                    onPress={() => insertMention(item.username)}
+                  >
+                    <Text style={styles.suggestionName}>{item.name}</Text>
+                    <Text style={styles.suggestionUsername}>@{item.username}</Text>
+                  </TouchableOpacity>
+                )}
+              />
+            </View>
+          )}
+        </View>
 
         <Text style={styles.counter}>{body.length}/2000</Text>
 
@@ -153,6 +207,30 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#222222",
   },
+  suggestionsContainer: {
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E3E3E3",
+    borderRadius: 12,
+    maxHeight: 150,
+    marginTop: 4,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  suggestionRow: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#F1F1F1",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  suggestionName: { fontSize: 14, fontWeight: "600", color: "#111111" },
+  suggestionUsername: { fontSize: 12, color: "#777777" },
   counter: { textAlign: "right", color: "#999999", fontSize: 11, marginTop: 6 },
   anonymousRow: {
     flexDirection: "row",

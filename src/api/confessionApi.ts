@@ -84,6 +84,16 @@ export type CommentItem = {
   replies?: CommentItem[];
 };
 
+export type UserMention = {
+  id: number;
+  name: string;
+  username: string;
+  avatarUrl?: string | null;
+};
+
+export const searchUsers = (q: string): Promise<UserMention[]> =>
+  apiRequest(`/Users/search?q=${encodeURIComponent(q)}`);
+
 export const getConfessions = (params?: { page?: number; pageSize?: number }) => {
   const queryParams = params ? `?${new URLSearchParams(params as Record<string, string>)}` : "";
   return apiRequest(`/Confessions${queryParams}`);
