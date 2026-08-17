@@ -12,7 +12,7 @@ import {
   ScrollView,
 } from "react-native";
 import { router } from "expo-router";
-import { apiRequest } from "../../src/api/api";
+import { createConfession } from "../../src/api/confessionApi";
 import { useAuth } from "../../context/AuthContext";
 
 export default function CreateConfessionScreen() {
@@ -27,16 +27,21 @@ export default function CreateConfessionScreen() {
       return;
     }
 
+    if (!user?.universityId) {
+      Alert.alert(
+        "Missing University Context",
+        "Could not detect your university identity. Please re-login."
+      );
+      return;
+    }
+
     try {
       setLoading(true);
 
-      await apiRequest("/Confessions", {
-        method: "POST",
-        body: JSON.stringify({
-          body: body.trim(),
-          isAnonymous: anonymous,
-          universityId: user?.universityId,
-        }),
+      await createConfession({
+        body: body.trim(),
+        isAnonymous: anonymous,
+        universityId: user.universityId,
       });
 
       Alert.alert(
@@ -131,20 +136,63 @@ export default function CreateConfessionScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F7F7F8" },
   content: { padding: 20, paddingBottom: 40 },
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 20 },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  },
   back: { fontSize: 28, color: "#111111" },
   title: { fontSize: 20, fontWeight: "800", color: "#111111" },
-  description: { fontSize: 14, lineHeight: 21, color: "#777777", marginBottom: 18 },
-  input: { minHeight: 220, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#E3E3E3", borderRadius: 16, padding: 16, fontSize: 15, color: "#222222" },
+  description: {
+    fontSize: 14,
+    lineHeight: 21,
+    color: "#777777",
+    marginBottom: 18,
+  },
+  input: {
+    minHeight: 220,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E3E3E3",
+    borderRadius: 16,
+    padding: 16,
+    fontSize: 15,
+    color: "#222222",
+  },
   counter: { textAlign: "right", color: "#999999", fontSize: 11, marginTop: 6 },
-  anonymousRow: { flexDirection: "row", alignItems: "center", backgroundColor: "#FFFFFF", borderRadius: 15, padding: 15, marginTop: 20, borderWidth: 1, borderColor: "#E6E6E6" },
-  checkbox: { width: 25, height: 25, borderRadius: 7, borderWidth: 1, borderColor: "#BBBBBB", alignItems: "center", justifyContent: "center" },
+  anonymousRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: 15,
+    padding: 15,
+    marginTop: 20,
+    borderWidth: 1,
+    borderColor: "#E6E6E6",
+  },
+  checkbox: {
+    width: 25,
+    height: 25,
+    borderRadius: 7,
+    borderWidth: 1,
+    borderColor: "#BBBBBB",
+    alignItems: "center",
+    justifyContent: "center",
+  },
   checkboxActive: { backgroundColor: "#111111", borderColor: "#111111" },
   check: { color: "#FFFFFF", fontWeight: "800" },
   anonymousInfo: { flex: 1, marginLeft: 12 },
   anonymousTitle: { fontSize: 14, fontWeight: "700", color: "#222222" },
   anonymousText: { fontSize: 11, color: "#888888", marginTop: 3 },
-  submitButton: { height: 54, backgroundColor: "#111111", borderRadius: 14, alignItems: "center", justifyContent: "center", marginTop: 25 },
+  submitButton: {
+    height: 54,
+    backgroundColor: "#111111",
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 25,
+  },
   submitDisabled: { opacity: 0.6 },
   submitText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
 });
