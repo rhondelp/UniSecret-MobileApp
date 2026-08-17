@@ -1,4 +1,14 @@
 import { apiRequest } from "./api";
+export type ReactionType = "Like" | "Haha" | "Angry" | "Sad" | "Love" | "Cry";
+
+export type ReactionUser = {
+  userId: number;
+  name: string;
+  username: string;
+  type: ReactionType;
+  reactedAt: string;
+};
+
 
 export type Confession = {
   id: number;
@@ -10,6 +20,7 @@ export type Confession = {
   authorUsername?: string;
   status: string;
   createdAt: string;
+  imageUrl?: string | null;
 
   category?: {
     id: number;
@@ -99,3 +110,18 @@ export const getCategories = (): Promise<Category[]> =>
 
 export const getTrendingHashtags = (): Promise<Hashtag[]> =>
   apiRequest("/Hashtags/trending");
+
+export const setReaction = (reactableId: number, reactableType: "Confession" | "Comment", type: ReactionType) =>
+  apiRequest("/Reactions/set", {
+    method: "POST",
+    body: JSON.stringify({ reactableId, reactableType, type }),
+  });
+
+export const getReactors = (reactableId: number, reactableType: "Confession" | "Comment"): Promise<ReactionUser[]> =>
+  apiRequest(`/Reactions/users?reactableId=${reactableId}&reactableType=${reactableType}`);
+
+export const shareConfession = (confessionId: number, caption?: string) =>
+  apiRequest("/Shares", {
+    method: "POST",
+    body: JSON.stringify({ confessionId, caption }),
+  });

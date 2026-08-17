@@ -1,11 +1,15 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { Confession } from "../src/api/confessionApi";
+import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import { Confession, ReactionType } from "../src/api/confessionApi";
 
 type ConfessionCardProps = {
   item: Confession;
   onToggleLike: (item: Confession) => void;
   onToggleSave: (item: Confession) => void;
+  onSelectReaction?: (item: Confession, type: ReactionType) => void;
+  onPressReactionsCount?: (item: Confession) => void;
+  onPressComment?: (item: Confession) => void;
+  onPressShare?: (item: Confession) => void;
   onPressTag?: (tag: string) => void;
 };
 
@@ -13,6 +17,9 @@ export const ConfessionCard: React.FC<ConfessionCardProps> = ({
   item,
   onToggleLike,
   onToggleSave,
+  onPressReactionsCount,
+  onPressComment,
+  onPressShare,
 }) => {
   return (
     <View style={styles.card}>
@@ -28,14 +35,14 @@ export const ConfessionCard: React.FC<ConfessionCardProps> = ({
 
         <View style={styles.userInfo}>
           <Text style={styles.userName}>
-            {item.isAnonymous 
-              ? "Anonymous" 
+            {item.isAnonymous
+              ? "Anonymous"
               : item.user?.name || item.authorName || "Anonymous User"}
           </Text>
           <Text style={styles.time}>{formatDate(item.createdAt)}</Text>
         </View>
 
-        <TouchableOpacity>
+        <TouchableOpacity activeOpacity={0.6}>
           <Text style={styles.more}>•••</Text>
         </TouchableOpacity>
       </View>
@@ -50,8 +57,31 @@ export const ConfessionCard: React.FC<ConfessionCardProps> = ({
       {/* BODY */}
       <Text style={styles.body}>{item.body}</Text>
 
-      {/* ACTIONS */}
+      {/* IMAGE ATTACHMENT */}
+      {item.imageUrl ? (
+        <Image
+          source={{ uri: item.imageUrl }}
+          style={styles.postImage}
+          resizeMode="cover"
+        />
+      ) : null}
+
+      {/* REACTION SUMMARY ROW */}
+      {(item.likesCount || 0) > 0 && (
+        <TouchableOpacity
+          style={styles.reactionSummaryRow}
+          onPress={() => onPressReactionsCount?.(item)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.reactionSummaryText}>
+            👍 ❤️ {item.likesCount} {item.likesCount === 1 ? "reaction" : "reactions"}
+          </Text>
+        </TouchableOpacity>
+      )}
+
+      {/* ACTIONS ROW */}
       <View style={styles.actions}>
+        {/* REACTION / LIKE BUTTON */}
         <TouchableOpacity
           style={styles.actionButton}
           onPress={() => onToggleLike(item)}
@@ -75,8 +105,29 @@ export const ConfessionCard: React.FC<ConfessionCardProps> = ({
           </Text>
         </TouchableOpacity>
 
+        {/* COMMENT BUTTON */}
         <TouchableOpacity
           style={styles.actionButton}
+          onPress={() => onPressComment?.(item)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.actionIcon}>💬</Text>
+          <Text style={styles.actionText}>Comment</Text>
+        </TouchableOpacity>
+
+        {/* SHARE BUTTON */}
+        <TouchableOpacity
+          style={styles.actionButton}
+          onPress={() => onPressShare?.(item)}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.actionIcon}>↗</Text>
+          <Text style={styles.actionText}>Share</Text>
+        </TouchableOpacity>
+
+        {/* SAVE / BOOKMARK BUTTON */}
+        <TouchableOpacity
+          style={styles.actionButtonRight}
           onPress={() => onToggleSave(item)}
           activeOpacity={0.7}
         >
@@ -87,14 +138,6 @@ export const ConfessionCard: React.FC<ConfessionCardProps> = ({
             ]}
           >
             {item.isSaved ? "★" : "☆"}
-          </Text>
-          <Text
-            style={[
-              styles.actionText,
-              item.isSaved && styles.actionTextActive,
-            ]}
-          >
-            {item.isSaved ? "Saved" : "Save"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -173,21 +216,41 @@ const styles = StyleSheet.create({
     lineHeight: 23,
     marginTop: 13,
   },
+  postImage: {
+    width: "100%",
+    height: 220,
+    borderRadius: 12,
+    marginTop: 12,
+  },
+  reactionSummaryRow: {
+    marginTop: 12,
+    paddingTop: 8,
+  },
+  reactionSummaryText: {
+    fontSize: 12,
+    color: "#666666",
+    fontWeight: "600",
+  },
   actions: {
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
     borderTopWidth: 1,
     borderTopColor: "#EEEEEE",
-    marginTop: 16,
+    marginTop: 12,
     paddingTop: 12,
   },
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
-    marginRight: 22,
+  },
+  actionButtonRight: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginLeft: "auto",
   },
   actionIcon: {
-    fontSize: 21,
+    fontSize: 18,
     color: "#333333",
     marginRight: 5,
   },
