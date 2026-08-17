@@ -1,17 +1,14 @@
 import React from "react";
-
 import { Tabs } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
 export default function TabsLayout() {
-
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-
         tabBarActiveTintColor: "#111111",
         tabBarInactiveTintColor: "#999999",
-
         tabBarStyle: {
           height: 65,
           paddingBottom: 8,
@@ -21,13 +18,23 @@ export default function TabsLayout() {
         },
       }}
     >
-
       <Tabs.Screen
         name="index"
         options={{
           title: "Home",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="home-outline" size={size || 24} color={color} />
+          ),
+        }}
+      />
 
-          tabBarIcon: () => null,
+      <Tabs.Screen
+        name="search"
+        options={{
+          title: "Search",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="search-outline" size={size || 24} color={color} />
+          ),
         }}
       />
 
@@ -35,8 +42,9 @@ export default function TabsLayout() {
         name="create"
         options={{
           title: "Create",
-
-          tabBarIcon: () => null,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="add-circle-outline" size={size || 24} color={color} />
+          ),
         }}
       />
 
@@ -44,8 +52,9 @@ export default function TabsLayout() {
         name="notifications"
         options={{
           title: "Notifications",
-
-          tabBarIcon: () => null,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="notifications-outline" size={size || 24} color={color} />
+          ),
         }}
       />
 
@@ -53,11 +62,11 @@ export default function TabsLayout() {
         name="profile"
         options={{
           title: "Profile",
-
-          tabBarIcon: () => null,
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="person-outline" size={size || 24} color={color} />
+          ),
         }}
       />
-
     </Tabs>
   );
 }

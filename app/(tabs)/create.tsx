@@ -27,21 +27,14 @@ export default function CreateConfessionScreen() {
       return;
     }
 
-    if (!user?.universityId) {
-      Alert.alert(
-        "Missing University Context",
-        "Could not detect your university identity. Please re-login."
-      );
-      return;
-    }
-
     try {
       setLoading(true);
 
       await createConfession({
         body: body.trim(),
         isAnonymous: anonymous,
-        universityId: user.universityId,
+        universityId: user?.universityId || 0,
+        categoryId: 1, // Default or selected category ID
       });
 
       Alert.alert(

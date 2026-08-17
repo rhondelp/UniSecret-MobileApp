@@ -69,18 +69,18 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       authData?.data?.token ??
       authData?.data?.accessToken;
 
-    const extractedUser: User | null =
-      authData?.user ??
-      authData?.data?.user ??
-      (authData?.id && authData?.email
-        ? {
-            id: authData.id,
-            name: authData.name ?? "",
-            username: authData.username ?? "",
-            email: authData.email,
-            universityId: authData.universityId ?? authData.data?.universityId ?? 0,
-          }
-        : null);
+  const extractedUser: User | null =
+    authData?.user ??
+    authData?.data?.user ??
+    (authData?.id && authData?.email
+      ? {
+          id: authData.id,
+          name: authData.name ?? "",
+          username: authData.username ?? "",
+          email: authData.email,
+          universityId: authData.universityId ?? authData.data?.universityId ?? 0,
+        }
+      : null);
 
     if (!extractedToken) {
       throw new Error("No authentication token found in response.");
