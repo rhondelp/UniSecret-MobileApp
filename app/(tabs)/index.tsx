@@ -16,6 +16,7 @@ import {
   toggleSave,
   Confession,
 } from "../../src/api/confessionApi";
+import { ConfessionCard } from "../../components/ConfessionCard";
 
 export default function HomeScreen() {
   const [confessions, setConfessions] = useState<Confession[]>([]);
@@ -70,9 +71,7 @@ export default function HomeScreen() {
           return {
             ...c,
             isLiked: newIsLiked,
-            likesCount: newIsLiked
-              ? currentCount + 1
-              : Math.max(0, currentCount - 1),
+            likesCount: newIsLiked ? currentCount + 1 : Math.max(0, currentCount - 1),
           };
         }
         return c;
@@ -85,19 +84,15 @@ export default function HomeScreen() {
         setConfessions((prev) =>
           prev.map((c) =>
             c.id === item.id
-              ? {
-                  ...c,
-                  isLiked: response.isLiked,
-                  likesCount: response.totalLikes,
-                }
+              ? { ...c, isLiked: response.isLiked, likesCount: response.totalLikes }
               : c
           )
         );
       }
     } catch (err) {
-      console.error("Failed to toggle like:", err);
+      console.error(err);
       setConfessions(previousState);
-      Alert.alert("Error", "Could not update like status. Please try again.");
+      Alert.alert("Error", "Could not update like status.");
     }
   };
 
@@ -105,108 +100,21 @@ export default function HomeScreen() {
     const previousState = [...confessions];
 
     setConfessions((prev) =>
-      prev.map((c) =>
-        c.id === item.id ? { ...c, isSaved: !c.isSaved } : c
-      )
+      prev.map((c) => (c.id === item.id ? { ...c, isSaved: !c.isSaved } : c))
     );
 
     try {
       const response = await toggleSave(item.id);
       if (typeof response?.isSaved === "boolean") {
         setConfessions((prev) =>
-          prev.map((c) =>
-            c.id === item.id ? { ...c, isSaved: response.isSaved } : c
-          )
+          prev.map((c) => (c.id === item.id ? { ...c, isSaved: response.isSaved } : c))
         );
       }
     } catch (err) {
-      console.error("Failed to toggle save:", err);
+      console.error(err);
       setConfessions(previousState);
-      Alert.alert("Error", "Could not save post. Please try again.");
+      Alert.alert("Error", "Could not update save status.");
     }
-  };
-
-  const renderConfession = ({ item }: { item: Confession }) => {
-    return (
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
-              {item.isAnonymous
-                ? "?"
-                : item.user?.name?.charAt(0)?.toUpperCase() || "U"}
-            </Text>
-          </View>
-
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>
-              {item.isAnonymous ? "Anonymous" : item.user?.name || "User"}
-            </Text>
-            <Text style={styles.time}>{formatDate(item.createdAt)}</Text>
-          </View>
-
-          <TouchableOpacity>
-            <Text style={styles.more}>•••</Text>
-          </TouchableOpacity>
-        </View>
-
-        {item.category?.name && (
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryText}>{item.category.name}</Text>
-          </View>
-        )}
-
-        <Text style={styles.body}>{item.body}</Text>
-
-        <View style={styles.actions}>
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleToggleLike(item)}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                styles.actionIcon,
-                item.isLiked && styles.actionIconActive,
-              ]}
-            >
-              {item.isLiked ? "♥" : "♡"}
-            </Text>
-            <Text
-              style={[
-                styles.actionText,
-                item.isLiked && styles.actionTextActive,
-              ]}
-            >
-              {item.likesCount || 0}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={styles.actionButton}
-            onPress={() => handleToggleSave(item)}
-            activeOpacity={0.7}
-          >
-            <Text
-              style={[
-                styles.actionIcon,
-                item.isSaved && styles.actionIconActive,
-              ]}
-            >
-              {item.isSaved ? "★" : "☆"}
-            </Text>
-            <Text
-              style={[
-                styles.actionText,
-                item.isSaved && styles.actionTextActive,
-              ]}
-            >
-              {item.isSaved ? "Saved" : "Save"}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
   };
 
   if (loading) {
@@ -221,9 +129,6 @@ export default function HomeScreen() {
   if (error) {
     return (
       <View style={styles.center}>
-        <View style={styles.errorIcon}>
-          <Text style={styles.errorIconText}>!</Text>
-        </View>
         <Text style={styles.errorTitle}>Unable to load feed</Text>
         <Text style={styles.errorText}>{error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={loadConfessions}>
@@ -251,7 +156,13 @@ export default function HomeScreen() {
 
       <FlatList
         data={confessions}
-        renderItem={renderConfession}
+        renderItem={({ item }) => (
+          <ConfessionCard
+            item={item}
+            onToggleLike={handleToggleLike}
+            onToggleSave={handleToggleSave}
+          />
+        )}
         keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
@@ -260,7 +171,6 @@ export default function HomeScreen() {
         }
         ListEmptyComponent={
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>✦</Text>
             <Text style={styles.emptyTitle}>No confessions yet</Text>
             <Text style={styles.emptyText}>
               Be the first person to share something with your community.
@@ -280,22 +190,9 @@ export default function HomeScreen() {
   );
 }
 
-function formatDate(dateString: string) {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString();
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F7F7F8" },
-  center: {
-    flex: 1,
-    backgroundColor: "#F7F7F8",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 24,
-  },
+  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 },
   loadingText: { marginTop: 12, color: "#777777", fontSize: 14 },
   header: {
     paddingHorizontal: 20,
@@ -320,60 +217,6 @@ const styles = StyleSheet.create({
   },
   notificationIcon: { fontSize: 20, color: "#111111" },
   listContent: { padding: 14, paddingBottom: 110 },
-  card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: "#EAEAEA",
-  },
-  cardHeader: { flexDirection: "row", alignItems: "center" },
-  avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 21,
-    backgroundColor: "#111111",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: { color: "#FFFFFF", fontSize: 17, fontWeight: "700" },
-  userInfo: { flex: 1, marginLeft: 11 },
-  userName: { fontSize: 14, fontWeight: "700", color: "#111111" },
-  time: { marginTop: 3, fontSize: 11, color: "#999999" },
-  more: { fontSize: 17, color: "#777777", letterSpacing: 2 },
-  categoryBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: "#F1F1F1",
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginTop: 14,
-  },
-  categoryText: { fontSize: 11, fontWeight: "600", color: "#555555" },
-  body: { color: "#222222", fontSize: 15, lineHeight: 23, marginTop: 13 },
-  actions: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderTopWidth: 1,
-    borderTopColor: "#EEEEEE",
-    marginTop: 16,
-    paddingTop: 12,
-  },
-  actionButton: { flexDirection: "row", alignItems: "center", marginRight: 22 },
-  actionIcon: { fontSize: 21, color: "#333333", marginRight: 5 },
-  actionIconActive: { color: "#EF4444" },
-  actionText: { color: "#777777", fontSize: 12 },
-  actionTextActive: { color: "#EF4444", fontWeight: "700" },
-  errorIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#FDECEC",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  errorIconText: { fontSize: 25, fontWeight: "700", color: "#C62828" },
   errorTitle: { fontSize: 20, fontWeight: "700", color: "#111111", marginTop: 15 },
   errorText: { textAlign: "center", color: "#777777", marginTop: 8 },
   retryButton: {
@@ -385,7 +228,6 @@ const styles = StyleSheet.create({
   },
   retryText: { color: "#FFFFFF", fontWeight: "700" },
   empty: { alignItems: "center", paddingTop: 80, paddingHorizontal: 30 },
-  emptyIcon: { fontSize: 40, color: "#999999" },
   emptyTitle: { fontSize: 20, fontWeight: "700", color: "#222222", marginTop: 15 },
   emptyText: { color: "#888888", textAlign: "center", lineHeight: 20, marginTop: 7 },
   floatingButton: {

@@ -45,6 +45,17 @@ export type SearchConfessionsQuery = {
   pageSize?: number;
 };
 
+export type Category = {
+  id: number;
+  name: string;
+};
+
+export type Hashtag = {
+  id: number;
+  tag: string;
+  usageCount?: number;
+};
+
 export const getConfessions = (params?: { page?: number; pageSize?: number }) => {
   const queryParams = params ? `?${new URLSearchParams(params as Record<string, string>)}` : "";
   return apiRequest(`/Confessions${queryParams}`);
@@ -78,3 +89,9 @@ export const toggleSave = (confessionId: number): Promise<{ isSaved?: boolean }>
   apiRequest(`/SavedPosts/${confessionId}/toggle`, { method: "POST" });
 
 export const getSavedPosts = () => apiRequest("/SavedPosts");
+
+export const getCategories = (): Promise<Category[]> =>
+  apiRequest("/Categories");
+
+export const getTrendingHashtags = (): Promise<Hashtag[]> =>
+  apiRequest("/Hashtags/trending");
