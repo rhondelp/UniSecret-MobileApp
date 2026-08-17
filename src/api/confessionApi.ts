@@ -71,6 +71,19 @@ export type Hashtag = {
   usageCount?: number;
 };
 
+export type CommentItem = {
+  id: number;
+  confessionId: number;
+  parentId?: number | null;
+  body: string;
+  isAnonymous: boolean;
+  authorName: string;
+  authorUsername: string;
+  likeCount: number;
+  createdAt: string;
+  replies?: CommentItem[];
+};
+
 export const getConfessions = (params?: { page?: number; pageSize?: number }) => {
   const queryParams = params ? `?${new URLSearchParams(params as Record<string, string>)}` : "";
   return apiRequest(`/Confessions${queryParams}`);
@@ -124,4 +137,13 @@ export const shareConfession = (confessionId: number, caption?: string) =>
   apiRequest("/Shares", {
     method: "POST",
     body: JSON.stringify({ confessionId, caption }),
+  });
+
+export const getComments = (confessionId: number, page = 1, pageSize = 20): Promise<{ items: CommentItem[] }> =>
+  apiRequest(`/confessions/${confessionId}/comments?page=${page}&pageSize=${pageSize}`);
+
+export const createComment = (confessionId: number, body: string, isAnonymous = false, parentId?: number) =>
+  apiRequest(`/confessions/${confessionId}/comments`, {
+    method: "POST",
+    body: JSON.stringify({ body, isAnonymous, parentId }),
   });
