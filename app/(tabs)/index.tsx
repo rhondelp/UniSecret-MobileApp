@@ -14,15 +14,22 @@ import {
   getConfessions,
   toggleLike,
   toggleSave,
+  setReaction,
   Confession,
+  ReactionType,
 } from "../../src/api/confessionApi";
 import { ConfessionCard } from "../../components/ConfessionCard";
+import { ReactorsModal } from "../../components/ReactorsModal";
 
 export default function HomeScreen() {
   const [confessions, setConfessions] = useState<Confession[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Reaction Modal State
+  const [selectedConfessionId, setSelectedConfessionId] = useState<number | null>(null);
+  const [reactorsModalVisible, setReactorsModalVisible] = useState(false);
 
   useEffect(() => {
     loadConfessions();
@@ -58,6 +65,32 @@ export default function HomeScreen() {
   const refreshFeed = async () => {
     setRefreshing(true);
     await loadConfessions();
+  };
+
+  const handleSelectReaction = async (item: Confession, type: ReactionType) => {
+    const previousState = [...confessions];
+
+    try {
+      const response = await setReaction(item.id, "Confession", type);
+      if (typeof response?.totalReactions === "number") {
+        setConfessions((prev) =>
+          prev.map((c) =>
+            c.id === item.id
+              ? {
+                  ...c,
+                  userReaction: response.userReaction,
+                  isLiked: response.userReaction !== null,
+                  likesCount: response.totalReactions,
+                }
+              : c
+          )
+        );
+      }
+    } catch (err) {
+      console.error("Set Reaction Error:", err);
+      setConfessions(previousState);
+      Alert.alert("Error", "Could not update reaction.");
+    }
   };
 
   const handleToggleLike = async (item: Confession) => {
@@ -117,6 +150,11 @@ export default function HomeScreen() {
     }
   };
 
+  const handleOpenReactors = (item: Confession) => {
+    setSelectedConfessionId(item.id);
+    setReactorsModalVisible(true);
+  };
+
   if (loading) {
     return (
       <View style={styles.center}>
@@ -160,7 +198,9 @@ export default function HomeScreen() {
           <ConfessionCard
             item={item}
             onToggleLike={handleToggleLike}
+            onSelectReaction={handleSelectReaction}
             onToggleSave={handleToggleSave}
+            onPressReactionsCount={handleOpenReactors}
           />
         )}
         keyExtractor={(item) => item.id.toString()}
@@ -186,6 +226,13 @@ export default function HomeScreen() {
       >
         <Text style={styles.floatingButtonText}>+</Text>
       </TouchableOpacity>
+
+      <ReactorsModal
+        visible={reactorsModalVisible}
+        reactableId={selectedConfessionId || 0}
+        reactableType="Confession"
+        onClose={() => setReactorsModalVisible(false)}
+      />
     </View>
   );
 }

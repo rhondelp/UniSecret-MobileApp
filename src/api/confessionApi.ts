@@ -1,5 +1,22 @@
 import { apiRequest } from "./api";
-export type ReactionType = "Like" | "Haha" | "Angry" | "Sad" | "Love" | "Cry";
+
+export type ReactionType =
+  | "Like"
+  | "Love"
+  | "Haha"
+  | "Sad"
+  | "Angry"
+  | "Cry";
+
+// Map string reaction types to C# Enum integer values
+const REACTION_TYPE_MAP: Record<ReactionType, number> = {
+  Like: 0,
+  Love: 1,
+  Haha: 2,
+  Sad: 3,
+  Angry: 4,
+  Cry: 5,
+};
 
 export type ReactionUser = {
   userId: number;
@@ -8,7 +25,6 @@ export type ReactionUser = {
   type: ReactionType;
   reactedAt: string;
 };
-
 
 export type Confession = {
   id: number;
@@ -34,9 +50,14 @@ export type Confession = {
     avatarUrl?: string | null;
   };
 
+  // Total number of reactions on this confession
   likesCount?: number;
+
   isLiked?: boolean;
   isSaved?: boolean;
+
+  // Current user's reaction
+  userReaction?: ReactionType | null;
 };
 
 export type ToggleLikeResponse = {
@@ -91,69 +112,200 @@ export type UserMention = {
   avatarUrl?: string | null;
 };
 
-export const searchUsers = (q: string): Promise<UserMention[]> =>
-  apiRequest(`/Users/search?q=${encodeURIComponent(q)}`);
+export const searchUsers = (
+  q: string
+): Promise<UserMention[]> =>
+  apiRequest(
+    `/Users/search?q=${encodeURIComponent(q)}`
+  );
 
-export const getConfessions = (params?: { page?: number; pageSize?: number }) => {
-  const queryParams = params ? `?${new URLSearchParams(params as Record<string, string>)}` : "";
-  return apiRequest(`/Confessions${queryParams}`);
+export const getConfessions = (
+  params?: {
+    page?: number;
+    pageSize?: number;
+  }
+) => {
+  const queryParams = params
+    ? `?${new URLSearchParams(
+        params as Record<string, string>
+      )}`
+    : "";
+
+  return apiRequest(
+    `/Confessions${queryParams}`
+  );
 };
 
-export const searchConfessions = (query: SearchConfessionsQuery) => {
+export const searchConfessions = (
+  query: SearchConfessionsQuery
+) => {
   const cleanParams: Record<string, string> = {};
-  Object.entries(query).forEach(([key, value]) => {
-    if (value !== undefined && value !== null && value !== "") {
-      cleanParams[key] = String(value);
+
+  Object.entries(query).forEach(
+    ([key, value]) => {
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== ""
+      ) {
+        cleanParams[key] = String(value);
+      }
     }
-  });
-  return apiRequest(`/Confessions/search?${new URLSearchParams(cleanParams)}`);
+  );
+
+  return apiRequest(
+    `/Confessions/search?${new URLSearchParams(
+      cleanParams
+    )}`
+  );
 };
 
-export const getConfession = (id: number) => apiRequest(`/Confessions/${id}`);
+export const getConfession = (id: number) =>
+  apiRequest(`/Confessions/${id}`);
 
-export const createConfession = (payload: CreateConfessionPayload) =>
+export const createConfession = (
+  payload: CreateConfessionPayload
+) =>
   apiRequest("/Confessions", {
     method: "POST",
     body: JSON.stringify(payload),
   });
 
-export const toggleLike = (likeableId: number, likeableType: "Confession" | "Comment"): Promise<ToggleLikeResponse> =>
-  apiRequest("/Likes/toggle", {
+export const setReaction = async (
+  reactableId: number,
+  reactableType:
+    | "Confession"
+    | "Comment",
+  type: ReactionType
+) => {
+  return apiRequest("/Reactions/set", {
     method: "POST",
-    body: JSON.stringify({ likeableId, likeableType }),
+    body: JSON.stringify({
+      reactableId,
+      reactableType,
+
+      // Convert:
+      // Like -> 0
+      // Love -> 1
+      // Haha -> 2
+      // Sad -> 3
+      // Angry -> 4
+      // Cry -> 5
+      type: REACTION_TYPE_MAP[type] ?? 0,
+    }),
   });
+};
 
-export const toggleSave = (confessionId: number): Promise<{ isSaved?: boolean }> =>
-  apiRequest(`/SavedPosts/${confessionId}/toggle`, { method: "POST" });
+export const toggleLike = async (
+  likeableId: number,
+  likeableType:
+    | "Confession"
+    | "Comment"
+): Promise<ToggleLikeResponse> => {
+  const response = await setReaction(
+    likeableId,
+    likeableType,
+    "Like"
+  );
 
-export const getSavedPosts = () => apiRequest("/SavedPosts");
+  return {
+    isLiked:
+      response.userReaction !== null &&
+      response.userReaction !== undefined,
 
-export const getCategories = (): Promise<Category[]> =>
-  apiRequest("/Categories");
+    totalLikes:
+      response.totalReactions,
+  };
+};
 
-export const getTrendingHashtags = (): Promise<Hashtag[]> =>
-  apiRequest("/Hashtags/trending");
+export const toggleSave = (
+  confessionId: number
+): Promise<{ isSaved?: boolean }> =>
+  apiRequest(
+    `/SavedPosts/${confessionId}/toggle`,
+    {
+      method: "POST",
+    }
+  );
 
-export const setReaction = (reactableId: number, reactableType: "Confession" | "Comment", type: ReactionType) =>
-  apiRequest("/Reactions/set", {
-    method: "POST",
-    body: JSON.stringify({ reactableId, reactableType, type }),
-  });
+export const getSavedPosts = () =>
+  apiRequest("/SavedPosts");
 
-export const getReactors = (reactableId: number, reactableType: "Confession" | "Comment"): Promise<ReactionUser[]> =>
-  apiRequest(`/Reactions/users?reactableId=${reactableId}&reactableType=${reactableType}`);
+export const getCategories =
+  (): Promise<Category[]> =>
+    apiRequest("/Categories");
 
-export const shareConfession = (confessionId: number, caption?: string) =>
+export const getTrendingHashtags =
+  (): Promise<Hashtag[]> =>
+    apiRequest("/Hashtags/trending");
+
+/**
+ * Get every reactor for a specific confession.
+ *
+ * Example response:
+ *
+ * [
+ *   {
+ *     userId: 1,
+ *     name: "John",
+ *     username: "john",
+ *     type: "Love",
+ *     reactedAt: "..."
+ *   },
+ *   {
+ *     userId: 2,
+ *     name: "Jane",
+ *     username: "jane",
+ *     type: "Sad",
+ *     reactedAt: "..."
+ *   }
+ * ]
+ */
+export const getReactors = (
+  reactableId: number,
+  reactableType:
+    | "Confession"
+    | "Comment"
+): Promise<ReactionUser[]> =>
+  apiRequest(
+    `/Reactions/users?reactableId=${reactableId}&reactableType=${reactableType}`
+  );
+
+export const shareConfession = (
+  confessionId: number,
+  caption?: string
+) =>
   apiRequest("/Shares", {
     method: "POST",
-    body: JSON.stringify({ confessionId, caption }),
+    body: JSON.stringify({
+      confessionId,
+      caption,
+    }),
   });
 
-export const getComments = (confessionId: number, page = 1, pageSize = 20): Promise<{ items: CommentItem[] }> =>
-  apiRequest(`/confessions/${confessionId}/comments?page=${page}&pageSize=${pageSize}`);
+export const getComments = (
+  confessionId: number,
+  page = 1,
+  pageSize = 20
+): Promise<{ items: CommentItem[] }> =>
+  apiRequest(
+    `/confessions/${confessionId}/comments?page=${page}&pageSize=${pageSize}`
+  );
 
-export const createComment = (confessionId: number, body: string, isAnonymous = false, parentId?: number) =>
-  apiRequest(`/confessions/${confessionId}/comments`, {
-    method: "POST",
-    body: JSON.stringify({ body, isAnonymous, parentId }),
-  });
+export const createComment = (
+  confessionId: number,
+  body: string,
+  isAnonymous = false,
+  parentId?: number
+) =>
+  apiRequest(
+    `/confessions/${confessionId}/comments`,
+    {
+      method: "POST",
+      body: JSON.stringify({
+        body,
+        isAnonymous,
+        parentId,
+      }),
+    }
+  );

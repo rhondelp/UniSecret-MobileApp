@@ -1,143 +1,524 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
-import { Confession, ReactionType } from "../src/api/confessionApi";
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+} from "react-native";
+
+import {
+  Confession,
+  ReactionType,
+  getReactors,
+  ReactionUser,
+} from "../src/api/confessionApi";
+
+import { ReactionPicker } from "./ReactionPicker";
 
 type ConfessionCardProps = {
   item: Confession;
   onToggleLike: (item: Confession) => void;
+  onSelectReaction?: (
+    item: Confession,
+    type: ReactionType
+  ) => void;
   onToggleSave: (item: Confession) => void;
-  onSelectReaction?: (item: Confession, type: ReactionType) => void;
-  onPressReactionsCount?: (item: Confession) => void;
-  onPressComment?: (item: Confession) => void;
-  onPressShare?: (item: Confession) => void;
-  onPressTag?: (tag: string) => void;
+  onPressReactionsCount?: (
+    item: Confession
+  ) => void;
+  onPressComment?: (
+    item: Confession
+  ) => void;
+  onPressShare?: (
+    item: Confession
+  ) => void;
+  onPressTag?: (
+    tag: string
+  ) => void;
 };
 
-export const ConfessionCard: React.FC<ConfessionCardProps> = ({
+// Reaction type -> Emoji
+const EMOJI_MAP: Record<
+  string | number,
+  string
+> = {
+  0: "👍",
+  1: "❤️",
+  2: "😂",
+  3: "😢",
+  4: "😡",
+  5: "😭",
+
+  Like: "👍",
+  Love: "❤️",
+  Haha: "😂",
+  Sad: "😢",
+  Angry: "😡",
+  Cry: "😭",
+};
+
+export const ConfessionCard: React.FC<
+  ConfessionCardProps
+> = ({
   item,
   onToggleLike,
+  onSelectReaction,
   onToggleSave,
   onPressReactionsCount,
   onPressComment,
   onPressShare,
 }) => {
+  const [showPicker, setShowPicker] =
+    useState(false);
+
+  /**
+   * Reactors belonging to THIS confession.
+   */
+  const [reactors, setReactors] = useState<
+    ReactionUser[]
+  >([]);
+
+  const [loadingReactors, setLoadingReactors] =
+    useState(false);
+
+  /**
+   * Prevent an old API request from overwriting
+   * newer reaction data.
+   */
+  const [requestVersion, setRequestVersion] =
+    useState(0);
+
+  /**
+   * Load the actual reactors for this confession.
+   */
+  const loadReactors = useCallback(
+    async () => {
+      const currentVersion =
+        requestVersion + 1;
+
+      setRequestVersion(
+        currentVersion
+      );
+
+      try {
+        setLoadingReactors(true);
+
+        const response =
+          await getReactors(
+            item.id,
+            "Confession"
+          );
+
+        /**
+         * Only use this response if it is
+         * still the newest request.
+         */
+        if (
+          currentVersion ===
+          requestVersion + 1
+        ) {
+          setReactors(
+            Array.isArray(response)
+              ? response
+              : []
+          );
+        }
+      } catch (error) {
+        console.error(
+          "Failed to load reactors:",
+          error
+        );
+      } finally {
+        setLoadingReactors(false);
+      }
+    },
+    [
+      item.id,
+      requestVersion,
+    ]
+  );
+
+  /**
+   * Initial load.
+   */
+  useEffect(() => {
+    loadReactors();
+  }, [item.id]);
+
+  /**
+   * IMPORTANT:
+   *
+   * When the parent updates:
+   *
+   * likesCount
+   * userReaction
+   *
+   * reload the reactors.
+   *
+   * This is what makes the emoji list
+   * automatically update after a reaction.
+   */
+  useEffect(() => {
+    if (item.id) {
+      loadReactors();
+    }
+  }, [
+    item.likesCount,
+    item.userReaction,
+  ]);
+
+  /**
+   * Get UNIQUE emojis actually used
+   * by reactors on this confession.
+   */
+  const getDisplayEmojis =
+    useCallback(() => {
+      const uniqueTypes =
+        new Set<string | number>();
+
+      reactors.forEach(
+        (reactor) => {
+          if (
+            reactor.type !==
+              null &&
+            reactor.type !==
+              undefined
+          ) {
+            uniqueTypes.add(
+              reactor.type
+            );
+          }
+        }
+      );
+
+      return Array.from(uniqueTypes)
+        .map(
+          (type) =>
+            EMOJI_MAP[type] || ""
+        )
+        .filter(Boolean)
+        .join("");
+    }, [reactors]);
+
+  const displayEmojis =
+    getDisplayEmojis();
+
+  /**
+   * TOTAL REACTIONS
+   *
+   * Never replace this with the number
+   * of unique emojis.
+   */
+  const totalReactions =
+    item.likesCount || 0;
+
+  const isLikedActive =
+    item.isLiked ||
+    item.userReaction != null;
+
+  /**
+   * When selecting a reaction:
+   *
+   * 1. Close picker
+   * 2. Tell parent to change reaction
+   * 3. Refresh actual reactors
+   */
+  const handlePickReaction = async (
+    type: ReactionType
+  ) => {
+    setShowPicker(false);
+
+    if (onSelectReaction) {
+      await Promise.resolve(
+        onSelectReaction(
+          item,
+          type
+        )
+      );
+
+      /**
+       * Give the backend mutation a chance
+       * to complete before retrieving the
+       * updated reactor list.
+       */
+      setTimeout(() => {
+        loadReactors();
+      }, 250);
+    } else {
+      onToggleLike(item);
+
+      setTimeout(() => {
+        loadReactors();
+      }, 250);
+    }
+  };
+
+  /**
+   * Normal Like button.
+   *
+   * Refresh reactor emojis after the
+   * reaction has been changed.
+   */
+  const handleToggleLike =
+    async () => {
+      if (showPicker) {
+        setShowPicker(false);
+        return;
+      }
+
+      onToggleLike(item);
+
+      setTimeout(() => {
+        loadReactors();
+      }, 250);
+    };
+
   return (
     <View style={styles.card}>
       {/* CARD HEADER */}
       <View style={styles.cardHeader}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
+          <Text
+            style={
+              styles.avatarText
+            }
+          >
             {item.isAnonymous
               ? "?"
-              : (item.user?.name || item.authorName || "A").charAt(0).toUpperCase()}
+              : (
+                  item.user?.name ||
+                  item.authorName ||
+                  "A"
+                )
+                  .charAt(0)
+                  .toUpperCase()}
           </Text>
         </View>
 
         <View style={styles.userInfo}>
-          <Text style={styles.userName}>
+          <Text
+            style={
+              styles.userName
+            }
+          >
             {item.isAnonymous
               ? "Anonymous"
-              : item.user?.name || item.authorName || "Anonymous User"}
+              : item.user?.name ||
+                item.authorName ||
+                "Anonymous User"}
           </Text>
-          <Text style={styles.time}>{formatDate(item.createdAt)}</Text>
+
+          <Text style={styles.time}>
+            {formatDate(
+              item.createdAt
+            )}
+          </Text>
         </View>
 
-        <TouchableOpacity activeOpacity={0.6}>
-          <Text style={styles.more}>•••</Text>
+        <TouchableOpacity
+          activeOpacity={0.6}
+        >
+          <Text style={styles.more}>
+            •••
+          </Text>
         </TouchableOpacity>
       </View>
 
-      {/* CATEGORY BADGE */}
+      {/* CATEGORY */}
       {item.category?.name && (
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryText}>{item.category.name}</Text>
+        <View
+          style={
+            styles.categoryBadge
+          }
+        >
+          <Text
+            style={
+              styles.categoryText
+            }
+          >
+            {item.category.name}
+          </Text>
         </View>
       )}
 
       {/* BODY */}
-      <Text style={styles.body}>{item.body}</Text>
+      <Text style={styles.body}>
+        {item.body}
+      </Text>
 
-      {/* IMAGE ATTACHMENT */}
+      {/* IMAGE */}
       {item.imageUrl ? (
         <Image
-          source={{ uri: item.imageUrl }}
-          style={styles.postImage}
+          source={{
+            uri: item.imageUrl,
+          }}
+          style={
+            styles.postImage
+          }
           resizeMode="cover"
         />
       ) : null}
 
-      {/* REACTION SUMMARY ROW */}
-      {(item.likesCount || 0) > 0 && (
+      {/* REACTION SUMMARY */}
+      {totalReactions > 0 && (
         <TouchableOpacity
-          style={styles.reactionSummaryRow}
-          onPress={() => onPressReactionsCount?.(item)}
+          style={
+            styles.reactionSummaryRow
+          }
+          onPress={() =>
+            onPressReactionsCount?.(
+              item
+            )
+          }
           activeOpacity={0.7}
         >
-          <Text style={styles.reactionSummaryText}>
-            👍 ❤️ {item.likesCount} {item.likesCount === 1 ? "reaction" : "reactions"}
+          <Text
+            style={
+              styles.reactionSummaryText
+            }
+          >
+            {displayEmojis && (
+              <Text>
+                {displayEmojis}{" "}
+              </Text>
+            )}
+
+            {totalReactions}{" "}
+            {totalReactions === 1
+              ? "Reaction"
+              : "Reactions"}
           </Text>
         </TouchableOpacity>
       )}
 
-      {/* ACTIONS ROW */}
+      {/* REACTION PICKER */}
+      {showPicker && (
+        <View
+          style={
+            styles.pickerWrapper
+          }
+        >
+          <ReactionPicker
+            onSelectReaction={
+              handlePickReaction
+            }
+          />
+        </View>
+      )}
+
+      {/* ACTIONS */}
       <View style={styles.actions}>
-        {/* REACTION / LIKE BUTTON */}
+        {/* REACTION BUTTON */}
         <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => onToggleLike(item)}
+          style={
+            styles.actionButton
+          }
+          onPress={
+            handleToggleLike
+          }
+          onLongPress={() =>
+            setShowPicker(
+              !showPicker
+            )
+          }
+          delayLongPress={250}
           activeOpacity={0.7}
         >
           <Text
             style={[
               styles.actionIcon,
-              item.isLiked && styles.actionIconActive,
+              isLikedActive &&
+                styles.actionIconActive,
             ]}
           >
-            {item.isLiked ? "♥" : "♡"}
+            {isLikedActive
+              ? item.userReaction
+                ? EMOJI_MAP[
+                    item.userReaction
+                  ] || "♥"
+                : "♥"
+              : "♡"}
           </Text>
+
+          {/* TOTAL COUNT */}
           <Text
             style={[
               styles.actionText,
-              item.isLiked && styles.actionTextActive,
+              isLikedActive &&
+                styles.actionTextActive,
             ]}
           >
-            {item.likesCount || 0}
+            {totalReactions}
           </Text>
         </TouchableOpacity>
 
-        {/* COMMENT BUTTON */}
+        {/* COMMENT */}
         <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => onPressComment?.(item)}
+          style={
+            styles.actionButton
+          }
+          onPress={() =>
+            onPressComment?.(item)
+          }
           activeOpacity={0.7}
         >
-          <Text style={styles.actionIcon}>💬</Text>
-          <Text style={styles.actionText}>Comment</Text>
+          <Text
+            style={styles.actionIcon}
+          >
+            💬
+          </Text>
+
+          <Text
+            style={styles.actionText}
+          >
+            Comment
+          </Text>
         </TouchableOpacity>
 
-        {/* SHARE BUTTON */}
+        {/* SHARE */}
         <TouchableOpacity
-          style={styles.actionButton}
-          onPress={() => onPressShare?.(item)}
+          style={
+            styles.actionButton
+          }
+          onPress={() =>
+            onPressShare?.(item)
+          }
           activeOpacity={0.7}
         >
-          <Text style={styles.actionIcon}>↗</Text>
-          <Text style={styles.actionText}>Share</Text>
+          <Text
+            style={styles.actionIcon}
+          >
+            ↗
+          </Text>
+
+          <Text
+            style={styles.actionText}
+          >
+            Share
+          </Text>
         </TouchableOpacity>
 
-        {/* SAVE / BOOKMARK BUTTON */}
+        {/* SAVE */}
         <TouchableOpacity
-          style={styles.actionButtonRight}
-          onPress={() => onToggleSave(item)}
+          style={
+            styles.actionButtonRight
+          }
+          onPress={() =>
+            onToggleSave(item)
+          }
           activeOpacity={0.7}
         >
           <Text
             style={[
               styles.actionIcon,
-              item.isSaved && styles.actionIconActive,
+              item.isSaved &&
+                styles.actionIconActive,
             ]}
           >
-            {item.isSaved ? "★" : "☆"}
+            {item.isSaved
+              ? "★"
+              : "☆"}
           </Text>
         </TouchableOpacity>
       </View>
@@ -145,10 +526,23 @@ export const ConfessionCard: React.FC<ConfessionCardProps> = ({
   );
 };
 
-function formatDate(dateString: string) {
+function formatDate(
+  dateString: string
+) {
   if (!dateString) return "";
-  const date = new Date(dateString);
-  if (Number.isNaN(date.getTime())) return "";
+
+  const date = new Date(
+    dateString
+  );
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return "";
+  }
+
   return date.toLocaleDateString();
 }
 
@@ -160,11 +554,14 @@ const styles = StyleSheet.create({
     marginBottom: 14,
     borderWidth: 1,
     borderColor: "#EAEAEA",
+    position: "relative",
   },
+
   cardHeader: {
     flexDirection: "row",
     alignItems: "center",
   },
+
   avatar: {
     width: 42,
     height: 42,
@@ -173,30 +570,36 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
   avatarText: {
     color: "#FFFFFF",
     fontSize: 17,
     fontWeight: "700",
   },
+
   userInfo: {
     flex: 1,
     marginLeft: 11,
   },
+
   userName: {
     fontSize: 14,
     fontWeight: "700",
     color: "#111111",
   },
+
   time: {
     marginTop: 3,
     fontSize: 11,
     color: "#999999",
   },
+
   more: {
     fontSize: 17,
     color: "#777777",
     letterSpacing: 2,
   },
+
   categoryBadge: {
     alignSelf: "flex-start",
     backgroundColor: "#F1F1F1",
@@ -205,32 +608,45 @@ const styles = StyleSheet.create({
     paddingVertical: 5,
     marginTop: 14,
   },
+
   categoryText: {
     fontSize: 11,
     fontWeight: "600",
     color: "#555555",
   },
+
   body: {
     color: "#222222",
     fontSize: 15,
     lineHeight: 23,
     marginTop: 13,
   },
+
   postImage: {
     width: "100%",
     height: 220,
     borderRadius: 12,
     marginTop: 12,
   },
+
   reactionSummaryRow: {
     marginTop: 12,
     paddingTop: 8,
   },
+
   reactionSummaryText: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#666666",
     fontWeight: "600",
   },
+
+  pickerWrapper: {
+    position: "absolute",
+    bottom: 50,
+    left: 16,
+    zIndex: 10,
+  },
+
   actions: {
     flexDirection: "row",
     alignItems: "center",
@@ -240,27 +656,33 @@ const styles = StyleSheet.create({
     marginTop: 12,
     paddingTop: 12,
   },
+
   actionButton: {
     flexDirection: "row",
     alignItems: "center",
   },
+
   actionButtonRight: {
     flexDirection: "row",
     alignItems: "center",
     marginLeft: "auto",
   },
+
   actionIcon: {
     fontSize: 18,
     color: "#333333",
     marginRight: 5,
   },
+
   actionIconActive: {
     color: "#EF4444",
   },
+
   actionText: {
     color: "#777777",
     fontSize: 12,
   },
+
   actionTextActive: {
     color: "#EF4444",
     fontWeight: "700",

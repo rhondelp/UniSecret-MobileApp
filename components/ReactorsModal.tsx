@@ -17,12 +17,22 @@ type Props = {
   onClose: () => void;
 };
 
-const EMOJI_MAP: Record<string, string> = {
+// Maps both enum index (0, 1, 2, 3, 4, 5) and string names to Emojis
+const EMOJI_MAP: Record<string | number, string> = {
+  // Numeric mapping (C# Enum serialized as integers)
+  0: "👍",
+  1: "❤️",
+  2: "😂",
+  3: "😢",
+  4: "😡",
+  5: "😭",
+
+  // String fallback mapping
   Like: "👍",
+  Love: "❤️",
   Haha: "😂",
-  Angry: "😡",
   Sad: "😢",
-  Care: "❤️",
+  Angry: "😡",
   Cry: "😭",
 };
 
@@ -32,11 +42,11 @@ export const ReactorsModal: React.FC<Props> = ({
   reactableType,
   onClose,
 }) => {
-    const [reactors, setReactors] = useState<ReactionUser[]>([]);
-    const [loading, setLoading] = useState(true);
+  const [reactors, setReactors] = useState<ReactionUser[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (visible) {
+    if (visible && reactableId > 0) {
       loadReactors();
     }
   }, [visible, reactableId]);
@@ -59,7 +69,7 @@ export const ReactorsModal: React.FC<Props> = ({
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <Text style={styles.title}>Reactions</Text>
-            <TouchableOpacity onPress={onClose}>
+            <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
               <Text style={styles.closeText}>✕</Text>
             </TouchableOpacity>
           </View>
@@ -69,12 +79,14 @@ export const ReactorsModal: React.FC<Props> = ({
           ) : (
             <FlatList
               data={reactors}
-              keyExtractor={(item) => item.userId.toString() + item.type}
+              keyExtractor={(item, index) => `${item.userId}-${item.type}-${index}`}
               ListEmptyComponent={<Text style={styles.empty}>No reactions yet.</Text>}
               renderItem={({ item }) => (
                 <View style={styles.reactorRow}>
                   <View style={styles.avatar}>
-                    <Text style={styles.avatarText}>{item.name.charAt(0)}</Text>
+                    <Text style={styles.avatarText}>
+                      {(item.name || item.username || "U").charAt(0).toUpperCase()}
+                    </Text>
                   </View>
                   <View style={{ flex: 1, marginLeft: 12 }}>
                     <Text style={styles.name}>{item.name}</Text>
