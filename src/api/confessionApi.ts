@@ -2,8 +2,12 @@ import { apiRequest } from "./api";
 
 export type Confession = {
   id: number;
+  universityId?: number;
+  categoryId?: number;
   body: string;
   isAnonymous: boolean;
+  authorName?: string;
+  authorUsername?: string;
   status: string;
   createdAt: string;
 

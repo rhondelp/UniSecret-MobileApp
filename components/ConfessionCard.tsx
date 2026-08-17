@@ -22,13 +22,15 @@ export const ConfessionCard: React.FC<ConfessionCardProps> = ({
           <Text style={styles.avatarText}>
             {item.isAnonymous
               ? "?"
-              : item.user?.name?.charAt(0)?.toUpperCase() || "U"}
+              : (item.user?.name || item.authorName || "A").charAt(0).toUpperCase()}
           </Text>
         </View>
 
         <View style={styles.userInfo}>
           <Text style={styles.userName}>
-            {item.isAnonymous ? "Anonymous" : item.user?.name || "User"}
+            {item.isAnonymous 
+              ? "Anonymous" 
+              : item.user?.name || item.authorName || "Anonymous User"}
           </Text>
           <Text style={styles.time}>{formatDate(item.createdAt)}</Text>
         </View>
