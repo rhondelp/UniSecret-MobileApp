@@ -1,6 +1,8 @@
+// tailwind.config.js
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  // Include all files in app, components, src, etc.
+  // Add the NativeWind preset here
+  presets: [require("nativewind/preset")],
   content: [
     "./app/**/*.{js,jsx,ts,tsx}",
     "./components/**/*.{js,jsx,ts,tsx}",
@@ -9,7 +11,6 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Optional: Define your custom Black/Gold theme colors
         obsidian: "#0A0A0C",
         surface: "#16161A",
         gold: "#EAB308",

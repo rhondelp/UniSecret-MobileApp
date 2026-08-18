@@ -4,7 +4,6 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
@@ -12,25 +11,67 @@ import {
   ScrollView,
   StatusBar,
 } from "react-native";
+
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
+
 import { loginUser } from "../../src/api/authApi";
 import { useAuth } from "../../context/AuthContext";
 
+import SweetAlert from "../../components/SweetAlert";
+
 export default function LoginScreen() {
+  // =========================
+  // FORM STATE
+  // =========================
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  // =========================
+  // LOADING STATE
+  // =========================
+
   const [loading, setLoading] = useState(false);
+
+  // =========================
+  // INPUT FOCUS STATE
+  // =========================
+
+  const [focusedInput, setFocusedInput] = useState<string | null>(
+    null
+  );
+
+  // =========================
+  // SWEET ALERT STATE
+  // =========================
+
+  const [showSuccess, setShowSuccess] = useState(false);
+
+  // =========================
+  // AUTH
+  // =========================
+
   const { login } = useAuth();
+
+  // =========================
+  // LOGIN
+  // =========================
 
   const handleLogin = async () => {
     if (!email.trim()) {
-      Alert.alert("Email Required", "Please enter your institutional email.");
+      Alert.alert(
+        "Email Required",
+        "Please enter your institutional email."
+      );
       return;
     }
 
     if (!password) {
-      Alert.alert("Password Required", "Please enter your password.");
+      Alert.alert(
+        "Password Required",
+        "Please enter your password."
+      );
       return;
     }
 
@@ -44,223 +85,274 @@ export default function LoginScreen() {
 
       await login(response);
 
-      Alert.alert("Welcome to UniSecret!", "You have successfully logged in.", [
-        {
-          text: "Continue",
-          onPress: () => {
-            router.replace("/(tabs)");
-          },
-        },
-      ]);
+      // Show custom success alert
+      setShowSuccess(true);
     } catch (error) {
       console.error("Login Error:", error);
+
       let message = "Unable to login. Please try again.";
+
       if (error instanceof Error) {
         message = error.message;
       }
+
       Alert.alert("Login Failed", message);
     } finally {
       setLoading(false);
     }
   };
 
+  // =========================
+  // INPUT STYLE
+  // =========================
+
+  const getInputStyle = (input: string) => {
+    const focused = focusedInput === input;
+
+    return {
+      borderColor: focused ? "#EAB308" : "#27272A",
+      backgroundColor: focused ? "#18181B" : "#111113",
+    };
+  };
+
+  // =========================
+  // SCREEN
+  // =========================
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0A0A0C" />
+    <SafeAreaView
+      className="flex-1 bg-[#09090B]"
+      edges={["top", "bottom"]}
+    >
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#09090B"
+      />
+
       <KeyboardAvoidingView
-        style={styles.keyboardView}
+        className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: "center",
+            paddingBottom: 30,
+          }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.container}>
-            {/* HERO BRANDING */}
-            <View style={styles.logo}>
-              <Text style={styles.logoText}>U</Text>
-            </View>
+          <View className="mx-auto w-full max-w-[500px] px-5">
 
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>
-              Sign in to your UniSecret account
-            </Text>
+            {/* =========================
+                TOP BAR
+            ========================= */}
 
-            {/* INPUT FIELDS */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Institutional Email</Text>
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="student@university.edu"
-                placeholderTextColor="#52525B"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!loading}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Enter your password"
-                placeholderTextColor="#52525B"
-                secureTextEntry
-                autoCapitalize="none"
-                autoCorrect={false}
-                editable={!loading}
-              />
-            </View>
-
-            {/* SUBMIT BUTTON */}
-            <TouchableOpacity
-              style={[styles.loginButton, loading && styles.buttonDisabled]}
-              onPress={handleLogin}
-              disabled={loading}
-              activeOpacity={0.85}
-            >
-              {loading ? (
-                <ActivityIndicator color="#0A0A0C" />
-              ) : (
-                <Text style={styles.loginButtonText}>Sign In</Text>
-              )}
-            </TouchableOpacity>
-
-            {/* REGISTER LINK */}
-            <View style={styles.registerContainer}>
-              <Text style={styles.registerText}>Don't have an account?</Text>
+            <View className="flex-row items-center justify-between pt-2">
               <TouchableOpacity
-                onPress={() => router.push("/register" as const)}
+                onPress={() => router.back()}
                 disabled={loading}
                 activeOpacity={0.7}
+                className="h-10 w-10 items-center justify-center rounded-full bg-[#141416]"
               >
-                <Text style={styles.registerLink}>Create Account</Text>
+                <Text className="mt-[-2px] text-[27px] font-light text-[#EAB308]">
+                  ‹
+                </Text>
+              </TouchableOpacity>
+
+              <View className="flex-row items-center">
+                <View className="h-1.5 w-6 rounded-full bg-[#EAB308]" />
+
+                <View className="ml-1.5 h-1.5 w-1.5 rounded-full bg-[#3F3F46]" />
+
+                <View className="ml-1.5 h-1.5 w-1.5 rounded-full bg-[#3F3F46]" />
+              </View>
+
+              <View className="w-10" />
+            </View>
+
+            {/* =========================
+                HERO
+            ========================= */}
+
+            <View className="mb-9 mt-10">
+              {/* LOGO */}
+
+              <View className="mb-6 h-[62px] w-[62px] items-center justify-center rounded-[19px] bg-[#EAB308]">
+                <Text className="text-[31px] font-black text-[#09090B]">
+                  U
+                </Text>
+              </View>
+
+              {/* TITLE */}
+
+              <Text className="text-[31px] font-extrabold tracking-[-1px] text-[#FAFAFA]">
+                Welcome back.
+              </Text>
+
+              <Text className="mt-2.5 max-w-[330px] text-[14px] leading-[21px] text-[#71717A]">
+                Sign in to continue to your anonymous university
+                community.
+              </Text>
+            </View>
+
+            {/* =========================
+                LOGIN CARD
+            ========================= */}
+
+            <View className="rounded-[22px] border border-[#202024] bg-[#101012] p-5">
+
+              {/* CARD HEADER */}
+
+              <View className="mb-6">
+                <Text className="text-[17px] font-bold text-[#FAFAFA]">
+                  Sign in
+                </Text>
+
+                <Text className="mt-1 text-[12px] text-[#66666F]">
+                  Use your university account credentials.
+                </Text>
+              </View>
+
+              {/* =========================
+                  EMAIL
+              ========================= */}
+
+              <View className="mb-5">
+                <Text className="mb-2.5 text-[13px] font-semibold text-[#D4D4D8]">
+                  Institutional Email
+                </Text>
+
+                <TextInput
+                  className="h-[56px] rounded-[16px] border px-4 text-[16px] text-[#F4F4F5]"
+                  style={getInputStyle("email")}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="student@university.edu"
+                  placeholderTextColor="#52525B"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!loading}
+                  onFocus={() => setFocusedInput("email")}
+                  onBlur={() => setFocusedInput(null)}
+                  selectionColor="#EAB308"
+                />
+              </View>
+
+              {/* =========================
+                  PASSWORD
+              ========================= */}
+
+              <View className="mb-2">
+                <Text className="mb-2.5 text-[13px] font-semibold text-[#D4D4D8]">
+                  Password
+                </Text>
+
+                <TextInput
+                  className="h-[56px] rounded-[16px] border px-4 text-[16px] text-[#F4F4F5]"
+                  style={getInputStyle("password")}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Enter your password"
+                  placeholderTextColor="#52525B"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!loading}
+                  onFocus={() => setFocusedInput("password")}
+                  onBlur={() => setFocusedInput(null)}
+                  selectionColor="#EAB308"
+                />
+              </View>
+
+              {/* =========================
+                  SIGN IN BUTTON
+              ========================= */}
+
+              <TouchableOpacity
+                className={`mt-6 h-[58px] flex-row items-center justify-center rounded-[17px] bg-[#EAB308] ${
+                  loading ? "opacity-60" : "opacity-100"
+                }`}
+                onPress={handleLogin}
+                disabled={loading}
+                activeOpacity={0.82}
+              >
+                {loading ? (
+                  <>
+                    <ActivityIndicator
+                      color="#09090B"
+                      size="small"
+                    />
+
+                    <Text className="ml-2.5 text-[15px] font-extrabold text-[#09090B]">
+                      Signing in...
+                    </Text>
+                  </>
+                ) : (
+                  <>
+                    <Text className="text-[15px] font-extrabold tracking-wide text-[#09090B]">
+                      Sign In
+                    </Text>
+
+                    <Text className="ml-2 text-[19px] font-bold text-[#09090B]">
+                      →
+                    </Text>
+                  </>
+                )}
               </TouchableOpacity>
             </View>
+
+            {/* =========================
+                REGISTER
+            ========================= */}
+
+            <View className="mt-7 flex-row items-center justify-center">
+              <Text className="text-[13px] text-[#71717A]">
+                New to UniSecret?
+              </Text>
+
+              <TouchableOpacity
+                onPress={() =>
+                  router.push("/register" as const)
+                }
+                disabled={loading}
+                activeOpacity={0.7}
+                className="ml-1.5 rounded-md px-1"
+              >
+                <Text className="text-[13px] font-bold text-[#EAB308]">
+                  Create Account
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* =========================
+                FOOTER
+            ========================= */}
+
+            <Text className="mt-7 px-8 text-center text-[10px] leading-[16px] text-[#45454D]">
+              Your university identity stays separate from
+              your anonymous community activity.
+            </Text>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* =========================
+          SWEET ALERT
+      ========================= */}
+
+      <SweetAlert
+        visible={showSuccess}
+        type="success"
+        title="Welcome back!"
+        message="You have successfully logged in to UniSecret."
+        buttonText="Continue"
+        onConfirm={() => {
+          setShowSuccess(false);
+          router.replace("/(tabs)");
+        }}
+      />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#0A0A0C",
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: "center",
-  },
-  container: {
-    width: "100%",
-    maxWidth: 440,
-    alignSelf: "center",
-    paddingHorizontal: 28,
-    paddingVertical: 36,
-  },
-  logo: {
-    width: 72,
-    height: 72,
-    borderRadius: 22,
-    backgroundColor: "#16161A",
-    borderWidth: 1.5,
-    borderColor: "#EAB308",
-    alignItems: "center",
-    justifyContent: "center",
-    alignSelf: "center",
-    marginBottom: 28,
-    shadowColor: "#EAB308",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  logoText: {
-    color: "#EAB308",
-    fontSize: 38,
-    fontWeight: "900",
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#F4F4F5",
-    textAlign: "center",
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: "#A1A1AA",
-    textAlign: "center",
-    marginTop: 8,
-    marginBottom: 36,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#D4D4D8",
-    marginBottom: 8,
-    letterSpacing: 0.2,
-  },
-  input: {
-    height: 52,
-    backgroundColor: "#16161A",
-    borderWidth: 1,
-    borderColor: "#27272A",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    color: "#F4F4F5",
-    fontSize: 15,
-  },
-  loginButton: {
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: "#EAB308",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
-    shadowColor: "#EAB308",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  loginButtonText: {
-    color: "#0A0A0C",
-    fontSize: 15,
-    fontWeight: "800",
-    letterSpacing: 0.3,
-  },
-  registerContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 28,
-  },
-  registerText: {
-    color: "#A1A1AA",
-    fontSize: 14,
-  },
-  registerLink: {
-    color: "#EAB308",
-    fontSize: 14,
-    fontWeight: "700",
-    marginLeft: 6,
-  },
-});

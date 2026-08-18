@@ -4,19 +4,22 @@ import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
-  SafeAreaView,
   ScrollView,
   ActivityIndicator,
-  Alert,
   StatusBar,
+  KeyboardAvoidingView,
+  Platform,
+  TextInputProps,
 } from "react-native";
 
+import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 
 import { registerUser } from "../../src/api/authApi";
 import { apiRequest } from "../../src/api/api";
 import { useAuth } from "../../context/AuthContext";
+
+import SweetAlert from "../../components/SweetAlert";
 
 type University = {
   id: number;
@@ -26,6 +29,55 @@ type University = {
   status: string;
   createdAt?: string;
 };
+
+type AlertType = "success" | "error" | "warning" | "info";
+
+type FieldProps = TextInputProps & {
+  label: string;
+  input: string;
+  value: string;
+  onChangeText: (text: string) => void;
+  loading: boolean;
+  focusedInput: string | null;
+  setFocusedInput: (input: string | null) => void;
+};
+
+function Field({
+  label,
+  input,
+  value,
+  onChangeText,
+  loading,
+  focusedInput,
+  setFocusedInput,
+  ...props
+}: FieldProps) {
+  const focused = focusedInput === input;
+
+  return (
+    <View className="mb-5">
+      <Text className="mb-2 text-[13px] font-semibold text-[#D4D4D8]">
+        {label}
+      </Text>
+
+      <TextInput
+        {...props}
+        value={value}
+        onChangeText={onChangeText}
+        placeholderTextColor="#52525B"
+        editable={!loading}
+        onFocus={() => setFocusedInput(input)}
+        onBlur={() => setFocusedInput(null)}
+        selectionColor="#EAB308"
+        className="h-[55px] rounded-[15px] border px-4 text-[16px] text-[#F4F4F5]"
+        style={{
+          borderColor: focused ? "#EAB308" : "#27272A",
+          backgroundColor: focused ? "#18181B" : "#111113",
+        }}
+      />
+    </View>
+  );
+}
 
 export default function RegisterScreen() {
   const { login } = useAuth();
@@ -49,13 +101,64 @@ export default function RegisterScreen() {
   const [selectedUniversity, setSelectedUniversity] =
     useState<University | null>(null);
 
-  const [loadingUniversities, setLoadingUniversities] = useState(true);
+  const [loadingUniversities, setLoadingUniversities] =
+    useState(true);
 
   // =========================
   // REGISTER LOADING
   // =========================
 
   const [loading, setLoading] = useState(false);
+
+  // =========================
+  // INPUT FOCUS
+  // =========================
+
+  const [focusedInput, setFocusedInput] =
+    useState<string | null>(null);
+
+  // =========================
+  // SWEET ALERT STATE
+  // =========================
+
+  const [alertVisible, setAlertVisible] = useState(false);
+
+  const [alertType, setAlertType] =
+    useState<AlertType>("success");
+
+  const [alertTitle, setAlertTitle] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertButtonText, setAlertButtonText] =
+    useState("Continue");
+
+  // =========================
+  // REGISTRATION RESULT
+  // =========================
+
+  const [registrationHasToken, setRegistrationHasToken] =
+    useState(false);
+
+  // =========================
+  // SWEET ALERT HELPER
+  // =========================
+
+  const showAlert = ({
+    type,
+    title,
+    message,
+    buttonText = "Continue",
+  }: {
+    type: AlertType;
+    title: string;
+    message: string;
+    buttonText?: string;
+  }) => {
+    setAlertType(type);
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertButtonText(buttonText);
+    setAlertVisible(true);
+  };
 
   // =========================
   // LOAD UNIVERSITIES
@@ -69,11 +172,7 @@ export default function RegisterScreen() {
     try {
       setLoadingUniversities(true);
 
-      console.log("Loading universities...");
-
       const response = await apiRequest("/Universities");
-
-      console.log("Universities response:", response);
 
       const data = Array.isArray(response)
         ? response
@@ -83,10 +182,15 @@ export default function RegisterScreen() {
     } catch (error) {
       console.error("University API Error:", error);
 
-      Alert.alert(
-        "Unable to Load Universities",
-        error instanceof Error ? error.message : "Please try again."
-      );
+      showAlert({
+        type: "error",
+        title: "Unable to Load Universities",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Please try again.",
+        buttonText: "Okay",
+      });
     } finally {
       setLoadingUniversities(false);
     }
@@ -98,56 +202,106 @@ export default function RegisterScreen() {
 
   const validateForm = () => {
     if (!name.trim()) {
-      Alert.alert("Missing Name", "Please enter your full name.");
+      showAlert({
+        type: "warning",
+        title: "Missing Name",
+        message: "Please enter your full name.",
+        buttonText: "Okay",
+      });
+
       return false;
     }
 
     if (!username.trim()) {
-      Alert.alert("Missing Username", "Please enter a username.");
+      showAlert({
+        type: "warning",
+        title: "Missing Username",
+        message: "Please enter a username.",
+        buttonText: "Okay",
+      });
+
       return false;
     }
 
     if (username.trim().length < 3) {
-      Alert.alert(
-        "Invalid Username",
-        "Username must contain at least 3 characters."
-      );
+      showAlert({
+        type: "warning",
+        title: "Invalid Username",
+        message:
+          "Username must contain at least 3 characters.",
+        buttonText: "Okay",
+      });
+
       return false;
     }
 
     if (!selectedUniversity) {
-      Alert.alert("University Required", "Please select your university.");
+      showAlert({
+        type: "warning",
+        title: "University Required",
+        message: "Please select your university.",
+        buttonText: "Okay",
+      });
+
       return false;
     }
 
     if (!email.trim()) {
-      Alert.alert("Missing Email", "Please enter your institutional email.");
+      showAlert({
+        type: "warning",
+        title: "Missing Email",
+        message:
+          "Please enter your institutional email.",
+        buttonText: "Okay",
+      });
+
       return false;
     }
 
     if (!email.includes("@")) {
-      Alert.alert("Invalid Email", "Please enter a valid email address.");
+      showAlert({
+        type: "warning",
+        title: "Invalid Email",
+        message:
+          "Please enter a valid email address.",
+        buttonText: "Okay",
+      });
+
       return false;
     }
 
     if (!password) {
-      Alert.alert("Missing Password", "Please create a password.");
+      showAlert({
+        type: "warning",
+        title: "Missing Password",
+        message: "Please create a password.",
+        buttonText: "Okay",
+      });
+
       return false;
     }
 
     if (password.length < 6) {
-      Alert.alert(
-        "Weak Password",
-        "Password must contain at least 6 characters."
-      );
+      showAlert({
+        type: "warning",
+        title: "Weak Password",
+        message:
+          "Password must contain at least 6 characters.",
+        buttonText: "Okay",
+      });
+
       return false;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert(
-        "Passwords Do Not Match",
-        "Please make sure both passwords are the same."
-      );
+      showAlert({
+        type: "warning",
+        title: "Passwords Do Not Match",
+        message:
+          "Please make sure both passwords are the same.",
+        buttonText: "Okay",
+      });
+
       return false;
     }
 
@@ -174,48 +328,60 @@ export default function RegisterScreen() {
         universityId: selectedUniversity!.id,
       };
 
-      console.log("Register Request:", {
-        ...requestData,
-        password: "********",
-      });
-
       const response = await registerUser(requestData);
 
       const hasToken =
-        response?.token || response?.accessToken || response?.data?.token;
+        response?.token ||
+        response?.accessToken ||
+        response?.data?.token;
 
       if (hasToken) {
         await login(response);
       }
 
-      Alert.alert(
-        "Account Created!",
-        "Your UniSecret account has been created successfully.",
-        [
-          {
-            text: "Continue",
-            onPress: () => {
-              if (hasToken) {
-                router.replace("/(tabs)");
-              } else {
-                router.replace("/login" as const);
-              }
-            },
-          },
-        ]
-      );
+      setRegistrationHasToken(!!hasToken);
+
+      showAlert({
+        type: "success",
+        title: "Account Created!",
+        message:
+          "Your UniSecret account has been created successfully.",
+        buttonText: "Continue",
+      });
     } catch (error) {
       console.error("Registration Error:", error);
 
-      let message = "Unable to create your account.";
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Unable to create your account.";
 
-      if (error instanceof Error) {
-        message = error.message;
-      }
-
-      Alert.alert("Registration Failed", message);
+      showAlert({
+        type: "error",
+        title: "Registration Failed",
+        message,
+        buttonText: "Try Again",
+      });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // =========================
+  // ALERT CONFIRM
+  // =========================
+
+  const handleAlertConfirm = () => {
+    setAlertVisible(false);
+
+    if (alertType === "success") {
+      if (registrationHasToken) {
+        router.replace("/(tabs)");
+      } else {
+        router.replace("/login" as const);
+      }
+
+      return;
     }
   };
 
@@ -224,423 +390,402 @@ export default function RegisterScreen() {
   // =========================
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0A0A0C" />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        contentContainerStyle={styles.scrollContent}
+    <SafeAreaView
+      className="flex-1 bg-[#09090B]"
+      edges={["top", "bottom"]}
+    >
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#09090B"
+      />
+
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View style={styles.container}>
-          {/* BACK BUTTON */}
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={{
+            paddingBottom: 45,
+          }}
+        >
+          <View className="mx-auto w-full max-w-[500px] px-5">
 
-          <TouchableOpacity
-            onPress={() => router.back()}
-            disabled={loading}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.backButton}>← Back</Text>
-          </TouchableOpacity>
+            {/* =========================
+                TOP BAR
+            ========================= */}
 
-          {/* LOGO */}
+            <View className="flex-row items-center justify-between pt-3">
+              <TouchableOpacity
+                onPress={() => router.back()}
+                disabled={loading}
+                activeOpacity={0.7}
+                className="h-10 w-10 items-center justify-center rounded-full bg-[#141416]"
+              >
+                <Text className="mt-[-2px] text-[27px] font-light text-[#EAB308]">
+                  ‹
+                </Text>
+              </TouchableOpacity>
 
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>U</Text>
-          </View>
+              <View className="flex-row items-center">
+                <View className="h-1.5 w-6 rounded-full bg-[#EAB308]" />
 
-          {/* TITLE */}
+                <View className="ml-1.5 h-1.5 w-1.5 rounded-full bg-[#3F3F46]" />
 
-          <Text style={styles.title}>Create your account</Text>
-
-          <Text style={styles.subtitle}>
-            Join your university community on UniSecret.
-          </Text>
-
-          {/* FULL NAME */}
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name</Text>
-
-            <TextInput
-              style={styles.input}
-              placeholder="Juan Dela Cruz"
-              placeholderTextColor="#52525B"
-              value={name}
-              onChangeText={setName}
-              editable={!loading}
-            />
-          </View>
-
-          {/* USERNAME */}
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Username</Text>
-
-            <TextInput
-              style={styles.input}
-              placeholder="juan_delacruz"
-              placeholderTextColor="#52525B"
-              value={username}
-              onChangeText={setUsername}
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!loading}
-            />
-
-            <Text style={styles.helper}>Used for @mentions.</Text>
-          </View>
-
-          {/* UNIVERSITY */}
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>University</Text>
-
-            {loadingUniversities ? (
-              <View style={styles.loadingBox}>
-                <ActivityIndicator color="#EAB308" />
-
-                <Text style={styles.loadingText}>Loading universities...</Text>
+                <View className="ml-1.5 h-1.5 w-1.5 rounded-full bg-[#3F3F46]" />
               </View>
-            ) : universities.length === 0 ? (
-              <View style={styles.emptyUniversity}>
-                <Text style={styles.emptyText}>No universities available.</Text>
 
-                <TouchableOpacity onPress={loadUniversities} activeOpacity={0.7}>
-                  <Text style={styles.retryText}>Retry</Text>
-                </TouchableOpacity>
+              <View className="w-10" />
+            </View>
+
+            {/* =========================
+                HERO
+            ========================= */}
+
+            <View className="mb-8 mt-8">
+              <View className="mb-5 h-[58px] w-[58px] items-center justify-center rounded-[18px] bg-[#EAB308]">
+                <Text className="text-[29px] font-black text-[#09090B]">
+                  U
+                </Text>
               </View>
-            ) : (
-              <View style={styles.universityList}>
-                {universities.map((university) => {
-                  const selected = selectedUniversity?.id === university.id;
 
-                  return (
-                    <TouchableOpacity
-                      key={university.id}
-                      style={[
-                        styles.universityOption,
-                        selected && styles.universityOptionSelected,
-                      ]}
-                      onPress={() => setSelectedUniversity(university)}
-                      disabled={loading}
-                      activeOpacity={0.8}
-                    >
-                      {/* RADIO */}
+              <Text className="text-[31px] font-extrabold tracking-[-1px] text-[#FAFAFA]">
+                Welcome to
+              </Text>
 
-                      <View
-                        style={[
-                          styles.radio,
-                          selected && styles.radioSelected,
-                        ]}
+              <View className="flex-row items-center">
+                <Text className="text-[31px] font-extrabold tracking-[-1px] text-[#FAFAFA]">
+                  Uni
+                </Text>
+
+                <Text className="text-[31px] font-extrabold tracking-[-1px] text-[#EAB308]">
+                  Secret
+                </Text>
+              </View>
+
+              <Text className="mt-3 max-w-[340px] text-[14px] leading-[21px] text-[#71717A]">
+                Create your anonymous university identity and
+                connect with your campus community.
+              </Text>
+            </View>
+
+            {/* =========================
+                ACCOUNT CARD
+            ========================= */}
+
+            <View className="mb-4 rounded-[22px] border border-[#202024] bg-[#101012] p-5">
+              <View className="mb-5">
+                <Text className="text-[17px] font-bold text-[#FAFAFA]">
+                  Your identity
+                </Text>
+
+                <Text className="mt-1 text-[12px] text-[#66666F]">
+                  This information helps personalize your account.
+                </Text>
+              </View>
+
+              <Field
+                label="Full Name"
+                input="name"
+                value={name}
+                onChangeText={setName}
+                placeholder="Juan Dela Cruz"
+                loading={loading}
+                focusedInput={focusedInput}
+                setFocusedInput={setFocusedInput}
+              />
+
+              <View className="mb-1">
+                <Field
+                  label="Username"
+                  input="username"
+                  value={username}
+                  onChangeText={setUsername}
+                  placeholder="juan_delacruz"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  loading={loading}
+                  focusedInput={focusedInput}
+                  setFocusedInput={setFocusedInput}
+                />
+              </View>
+
+              <Text className="mt-[-10px] text-[11px] text-[#55555D]">
+                Your username will be used for @mentions.
+              </Text>
+            </View>
+
+            {/* =========================
+                UNIVERSITY
+            ========================= */}
+
+            <View className="mb-4 rounded-[22px] border border-[#202024] bg-[#101012] p-5">
+              <View className="mb-5">
+                <Text className="text-[17px] font-bold text-[#FAFAFA]">
+                  Your university
+                </Text>
+
+                <Text className="mt-1 text-[12px] text-[#66666F]">
+                  Choose the campus community you belong to.
+                </Text>
+              </View>
+
+              {loadingUniversities ? (
+                <View className="h-[70px] flex-row items-center justify-center rounded-[16px] bg-[#151517]">
+                  <ActivityIndicator
+                    color="#EAB308"
+                    size="small"
+                  />
+
+                  <Text className="ml-3 text-[13px] text-[#71717A]">
+                    Loading universities...
+                  </Text>
+                </View>
+              ) : universities.length === 0 ? (
+                <View className="rounded-[16px] bg-[#151517] p-5">
+                  <Text className="text-center text-[13px] text-[#71717A]">
+                    No universities are currently available.
+                  </Text>
+
+                  <TouchableOpacity
+                    onPress={loadUniversities}
+                    activeOpacity={0.7}
+                    className="mt-4 self-center rounded-full bg-[#211F16] px-5 py-2.5"
+                  >
+                    <Text className="text-[12px] font-bold text-[#EAB308]">
+                      Retry
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <View className="gap-2.5">
+                  {universities.map((university) => {
+                    const selected =
+                      selectedUniversity?.id === university.id;
+
+                    return (
+                      <TouchableOpacity
+                        key={university.id}
+                        onPress={() =>
+                          setSelectedUniversity(university)
+                        }
+                        disabled={loading}
+                        activeOpacity={0.75}
+                        className={`min-h-[72px] flex-row items-center rounded-[16px] border px-3.5 ${
+                          selected
+                            ? "border-[#EAB308] bg-[#1B190F]"
+                            : "border-[#27272A] bg-[#151517]"
+                        }`}
                       >
-                        {selected && <View style={styles.radioInner} />}
-                      </View>
+                        <View
+                          className={`h-[42px] w-[42px] items-center justify-center rounded-[12px] ${
+                            selected
+                              ? "bg-[#EAB308]"
+                              : "bg-[#232326]"
+                          }`}
+                        >
+                          <Text
+                            className={`text-[16px] font-extrabold ${
+                              selected
+                                ? "text-[#09090B]"
+                                : "text-[#A1A1AA]"
+                            }`}
+                          >
+                            {university.name
+                              .trim()
+                              .charAt(0)
+                              .toUpperCase()}
+                          </Text>
+                        </View>
 
-                      {/* UNIVERSITY INFO */}
+                        <View className="ml-3 flex-1 pr-3">
+                          <Text
+                            numberOfLines={1}
+                            className="text-[14px] font-bold text-[#F4F4F5]"
+                          >
+                            {university.name}
+                          </Text>
 
-                      <View style={styles.universityInfo}>
-                        <Text style={styles.universityName}>
-                          {university.name}
-                        </Text>
+                          <Text
+                            numberOfLines={1}
+                            className="mt-1 text-[11px] text-[#71717A]"
+                          >
+                            {university.domain}
+                          </Text>
+                        </View>
 
-                        <Text style={styles.universityDomain}>
-                          {university.domain}
-                        </Text>
-                      </View>
-                    </TouchableOpacity>
-                  );
-                })}
+                        <View
+                          className={`h-5 w-5 items-center justify-center rounded-full border-2 ${
+                            selected
+                              ? "border-[#EAB308]"
+                              : "border-[#3F3F46]"
+                          }`}
+                        >
+                          {selected && (
+                            <View className="h-2.5 w-2.5 rounded-full bg-[#EAB308]" />
+                          )}
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              )}
+            </View>
+
+            {/* =========================
+                CONTACT
+            ========================= */}
+
+            <View className="mb-4 rounded-[22px] border border-[#202024] bg-[#101012] p-5">
+              <View className="mb-5">
+                <Text className="text-[17px] font-bold text-[#FAFAFA]">
+                  Contact
+                </Text>
+
+                <Text className="mt-1 text-[12px] text-[#66666F]">
+                  Use your official university email.
+                </Text>
               </View>
-            )}
-          </View>
 
-          {/* EMAIL */}
+              <Field
+                label="Institutional Email"
+                input="email"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="student@university.edu"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                loading={loading}
+                focusedInput={focusedInput}
+                setFocusedInput={setFocusedInput}
+              />
+            </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Institutional Email</Text>
+            {/* =========================
+                SECURITY
+            ========================= */}
 
-            <TextInput
-              style={styles.input}
-              placeholder="student@university.edu"
-              placeholderTextColor="#52525B"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              autoCorrect={false}
-              editable={!loading}
-            />
+            <View className="mb-5 rounded-[22px] border border-[#202024] bg-[#101012] p-5">
+              <View className="mb-5">
+                <Text className="text-[17px] font-bold text-[#FAFAFA]">
+                  Secure your account
+                </Text>
 
-            <Text style={styles.helper}>Use your university-issued email.</Text>
-          </View>
+                <Text className="mt-1 text-[12px] text-[#66666F]">
+                  Create a password with at least 6 characters.
+                </Text>
+              </View>
 
-          {/* PASSWORD */}
+              <Field
+                label="Password"
+                input="password"
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Create a password"
+                secureTextEntry
+                loading={loading}
+                focusedInput={focusedInput}
+                setFocusedInput={setFocusedInput}
+              />
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
+              <Field
+                label="Confirm Password"
+                input="confirmPassword"
+                value={confirmPassword}
+                onChangeText={setConfirmPassword}
+                placeholder="Repeat your password"
+                secureTextEntry
+                loading={loading}
+                focusedInput={focusedInput}
+                setFocusedInput={setFocusedInput}
+              />
+            </View>
 
-            <TextInput
-              style={styles.input}
-              placeholder="Create a password"
-              placeholderTextColor="#52525B"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-              editable={!loading}
-            />
-          </View>
-
-          {/* CONFIRM PASSWORD */}
-
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Confirm Password</Text>
-
-            <TextInput
-              style={styles.input}
-              placeholder="Repeat your password"
-              placeholderTextColor="#52525B"
-              value={confirmPassword}
-              onChangeText={setConfirmPassword}
-              secureTextEntry
-              editable={!loading}
-            />
-          </View>
-
-          {/* REGISTER BUTTON */}
-
-          <TouchableOpacity
-            style={[styles.registerButton, loading && styles.buttonDisabled]}
-            onPress={handleRegister}
-            disabled={loading}
-            activeOpacity={0.85}
-          >
-            {loading ? (
-              <ActivityIndicator color="#0A0A0C" />
-            ) : (
-              <Text style={styles.registerButtonText}>Create Account</Text>
-            )}
-          </TouchableOpacity>
-
-          {/* LOGIN LINK */}
-
-          <View style={styles.loginContainer}>
-            <Text style={styles.loginText}>Already have an account?</Text>
+            {/* =========================
+                CREATE ACCOUNT
+            ========================= */}
 
             <TouchableOpacity
-              onPress={() => router.replace("/login" as const)}
+              onPress={handleRegister}
               disabled={loading}
-              activeOpacity={0.7}
+              activeOpacity={0.82}
+              className={`h-[60px] flex-row items-center justify-center rounded-[18px] bg-[#EAB308] ${
+                loading ? "opacity-60" : ""
+              }`}
             >
-              <Text style={styles.loginLink}>Sign In</Text>
+              {loading ? (
+                <>
+                  <ActivityIndicator
+                    color="#09090B"
+                    size="small"
+                  />
+
+                  <Text className="ml-2.5 text-[15px] font-extrabold text-[#09090B]">
+                    Creating account...
+                  </Text>
+                </>
+              ) : (
+                <>
+                  <Text className="text-[15px] font-extrabold tracking-wide text-[#09090B]">
+                    Create Account
+                  </Text>
+
+                  <Text className="ml-2 text-[19px] font-bold text-[#09090B]">
+                    →
+                  </Text>
+                </>
+              )}
             </TouchableOpacity>
+
+            {/* =========================
+                LOGIN
+            ========================= */}
+
+            <View className="mt-7 flex-row items-center justify-center">
+              <Text className="text-[13px] text-[#71717A]">
+                Already part of UniSecret?
+              </Text>
+
+              <TouchableOpacity
+                onPress={() =>
+                  router.replace("/login" as const)
+                }
+                disabled={loading}
+                activeOpacity={0.7}
+                className="ml-1.5 px-1"
+              >
+                <Text className="text-[13px] font-bold text-[#EAB308]">
+                  Sign In
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* =========================
+                FOOTER
+            ========================= */}
+
+            <Text className="mt-5 px-6 text-center text-[10px] leading-[16px] text-[#45454D]">
+              By creating an account, you can participate in
+              your university community through UniSecret.
+            </Text>
           </View>
-        </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      {/* =========================
+          SWEET ALERT
+      ========================= */}
+
+      <SweetAlert
+        visible={alertVisible}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        buttonText={alertButtonText}
+        onConfirm={handleAlertConfirm}
+      />
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#0A0A0C",
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  container: {
-    width: "100%",
-    maxWidth: 480,
-    alignSelf: "center",
-    paddingHorizontal: 28,
-    paddingVertical: 28,
-  },
-  backButton: {
-    color: "#EAB308",
-    fontSize: 15,
-    fontWeight: "600",
-    marginBottom: 24,
-  },
-  logo: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: "#16161A",
-    borderWidth: 1.5,
-    borderColor: "#EAB308",
-    alignItems: "center",
-    justifyContent: "center",
-    alignSelf: "center",
-    marginBottom: 20,
-    shadowColor: "#EAB308",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  logoText: {
-    color: "#EAB308",
-    fontSize: 34,
-    fontWeight: "900",
-  },
-  title: {
-    color: "#F4F4F5",
-    fontSize: 26,
-    fontWeight: "800",
-    textAlign: "center",
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    color: "#A1A1AA",
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center",
-    marginTop: 8,
-    marginBottom: 32,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    color: "#D4D4D8",
-    fontSize: 13,
-    fontWeight: "600",
-    marginBottom: 8,
-    letterSpacing: 0.2,
-  },
-  input: {
-    height: 52,
-    backgroundColor: "#16161A",
-    borderWidth: 1,
-    borderColor: "#27272A",
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    color: "#F4F4F5",
-    fontSize: 15,
-  },
-  helper: {
-    color: "#71717A",
-    fontSize: 12,
-    marginTop: 6,
-  },
-  loadingBox: {
-    height: 55,
-    backgroundColor: "#16161A",
-    borderWidth: 1,
-    borderColor: "#27272A",
-    borderRadius: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  loadingText: {
-    color: "#A1A1AA",
-    fontSize: 13,
-    marginLeft: 8,
-  },
-  emptyUniversity: {
-    backgroundColor: "#16161A",
-    borderWidth: 1,
-    borderColor: "#27272A",
-    borderRadius: 14,
-    padding: 18,
-    alignItems: "center",
-  },
-  emptyText: {
-    color: "#A1A1AA",
-    fontSize: 13,
-  },
-  retryText: {
-    color: "#EAB308",
-    fontWeight: "700",
-    fontSize: 13,
-    marginTop: 8,
-  },
-  universityList: {
-    gap: 10,
-  },
-  universityOption: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#16161A",
-    borderWidth: 1,
-    borderColor: "#27272A",
-    borderRadius: 14,
-    padding: 14,
-  },
-  universityOptionSelected: {
-    borderColor: "#EAB308",
-    backgroundColor: "#1C1C22",
-  },
-  radio: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: "#52525B",
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 12,
-  },
-  radioSelected: {
-    borderColor: "#EAB308",
-  },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: "#EAB308",
-  },
-  universityInfo: {
-    flex: 1,
-  },
-  universityName: {
-    color: "#F4F4F5",
-    fontSize: 14,
-    fontWeight: "700",
-  },
-  universityDomain: {
-    color: "#A1A1AA",
-    fontSize: 12,
-    marginTop: 2,
-  },
-  registerButton: {
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: "#EAB308",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 10,
-    shadowColor: "#EAB308",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  buttonDisabled: {
-    opacity: 0.5,
-  },
-  registerButtonText: {
-    color: "#0A0A0C",
-    fontSize: 15,
-    fontWeight: "800",
-    letterSpacing: 0.3,
-  },
-  loginContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginTop: 26,
-    marginBottom: 20,
-  },
-  loginText: {
-    color: "#A1A1AA",
-    fontSize: 14,
-  },
-  loginLink: {
-    color: "#EAB308",
-    fontSize: 14,
-    fontWeight: "700",
-    marginLeft: 6,
-  },
-});
