@@ -9,6 +9,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  StatusBar,
 } from "react-native";
 import {
   searchConfessions,
@@ -146,12 +147,14 @@ export default function SearchScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0A0A0C" />
+
       {/* SEARCH HEADER */}
       <View style={styles.header}>
         <TextInput
           style={styles.searchInput}
           placeholder="Search campus confessions or tags..."
-          placeholderTextColor="#999999"
+          placeholderTextColor="#52525B"
           value={query}
           onChangeText={setQuery}
           clearButtonMode="while-editing"
@@ -170,6 +173,7 @@ export default function SearchScreen() {
                   key={h.id}
                   style={[styles.tagChip, active && styles.tagChipActive]}
                   onPress={() => setSelectedTag(active ? null : h.tag)}
+                  activeOpacity={0.8}
                 >
                   <Text style={[styles.tagText, active && styles.tagTextActive]}>
                     #{h.tag}
@@ -191,6 +195,7 @@ export default function SearchScreen() {
                 selectedCategory === null && styles.categoryChipActive,
               ]}
               onPress={() => setSelectedCategory(null)}
+              activeOpacity={0.8}
             >
               <Text
                 style={[
@@ -209,6 +214,7 @@ export default function SearchScreen() {
                   key={cat.id}
                   style={[styles.categoryChip, active && styles.categoryChipActive]}
                   onPress={() => setSelectedCategory(active ? null : cat.id)}
+                  activeOpacity={0.8}
                 >
                   <Text style={[styles.categoryText, active && styles.categoryTextActive]}>
                     {cat.name}
@@ -223,7 +229,7 @@ export default function SearchScreen() {
       {/* SEARCH RESULTS FEED */}
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator color="#111111" />
+          <ActivityIndicator color="#EAB308" />
         </View>
       ) : (
         <FlatList
@@ -253,42 +259,48 @@ export default function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F7F7F8" },
-  header: { padding: 16, backgroundColor: "#FFFFFF", borderBottomWidth: 1, borderBottomColor: "#EEEEEE" },
+  container: { flex: 1, backgroundColor: "#0A0A0C" },
+  header: { padding: 16, backgroundColor: "#16161A", borderBottomWidth: 1, borderBottomColor: "#27272A" },
   searchInput: {
     height: 48,
-    backgroundColor: "#F1F1F1",
+    backgroundColor: "#0A0A0C",
+    borderWidth: 1,
+    borderColor: "#27272A",
     borderRadius: 12,
     paddingHorizontal: 16,
     fontSize: 15,
-    color: "#111111",
+    color: "#F4F4F5",
   },
-  sectionContainer: { backgroundColor: "#FFFFFF", paddingVertical: 10 },
-  sectionTitle: { fontSize: 13, fontWeight: "700", color: "#666666", paddingHorizontal: 16, marginBottom: 6 },
+  sectionContainer: { backgroundColor: "#16161A", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#27272A" },
+  sectionTitle: { fontSize: 12, fontWeight: "700", color: "#A1A1AA", paddingHorizontal: 16, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 },
   chipRow: { paddingHorizontal: 12 },
   tagChip: {
-    backgroundColor: "#F1F5F9",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    backgroundColor: "#27272A",
+    paddingHorizontal: 14,
+    paddingVertical: 7,
     borderRadius: 16,
     marginHorizontal: 4,
+    borderWidth: 1,
+    borderColor: "#3F3F46",
   },
-  tagChipActive: { backgroundColor: "#111111" },
-  tagText: { fontSize: 13, fontWeight: "600", color: "#475569" },
-  tagTextActive: { color: "#FFFFFF" },
+  tagChipActive: { backgroundColor: "#EAB308", borderColor: "#EAB308" },
+  tagText: { fontSize: 13, fontWeight: "600", color: "#D4D4D8" },
+  tagTextActive: { color: "#0A0A0C", fontWeight: "800" },
   categoryChip: {
-    backgroundColor: "#E5E7EB",
-    paddingHorizontal: 14,
-    paddingVertical: 6,
+    backgroundColor: "#27272A",
+    paddingHorizontal: 16,
+    paddingVertical: 7,
     borderRadius: 20,
     marginHorizontal: 4,
+    borderWidth: 1,
+    borderColor: "#3F3F46",
   },
-  categoryChipActive: { backgroundColor: "#111111" },
-  categoryText: { fontSize: 13, fontWeight: "600", color: "#374151" },
-  categoryTextActive: { color: "#FFFFFF" },
+  categoryChipActive: { backgroundColor: "#EAB308", borderColor: "#EAB308" },
+  categoryText: { fontSize: 13, fontWeight: "600", color: "#D4D4D8" },
+  categoryTextActive: { color: "#0A0A0C", fontWeight: "800" },
   listContent: { padding: 14, paddingBottom: 110 },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
   empty: { alignItems: "center", paddingTop: 60, paddingHorizontal: 30 },
-  emptyTitle: { fontSize: 18, fontWeight: "700", color: "#222222" },
-  emptyText: { color: "#888888", textAlign: "center", marginTop: 6 },
+  emptyTitle: { fontSize: 18, fontWeight: "700", color: "#F4F4F5" },
+  emptyText: { color: "#A1A1AA", textAlign: "center", marginTop: 8, lineHeight: 20 },
 });

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Alert,
   ScrollView,
+  StatusBar,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -65,6 +66,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#0A0A0C" />
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -75,13 +77,17 @@ export default function LoginScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.container}>
+            {/* HERO BRANDING */}
             <View style={styles.logo}>
               <Text style={styles.logoText}>U</Text>
             </View>
 
-            <Text style={styles.title}>Welcome back</Text>
-            <Text style={styles.subtitle}>Sign in to your UniSecret account</Text>
+            <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.subtitle}>
+              Sign in to your UniSecret account
+            </Text>
 
+            {/* INPUT FIELDS */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Institutional Email</Text>
               <TextInput
@@ -89,7 +95,7 @@ export default function LoginScreen() {
                 value={email}
                 onChangeText={setEmail}
                 placeholder="student@university.edu"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#52525B"
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -104,7 +110,7 @@ export default function LoginScreen() {
                 value={password}
                 onChangeText={setPassword}
                 placeholder="Enter your password"
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor="#52525B"
                 secureTextEntry
                 autoCapitalize="none"
                 autoCorrect={false}
@@ -112,24 +118,27 @@ export default function LoginScreen() {
               />
             </View>
 
+            {/* SUBMIT BUTTON */}
             <TouchableOpacity
               style={[styles.loginButton, loading && styles.buttonDisabled]}
               onPress={handleLogin}
               disabled={loading}
-              activeOpacity={0.8}
+              activeOpacity={0.85}
             >
               {loading ? (
-                <ActivityIndicator color="#FFFFFF" />
+                <ActivityIndicator color="#0A0A0C" />
               ) : (
                 <Text style={styles.loginButtonText}>Sign In</Text>
               )}
             </TouchableOpacity>
 
+            {/* REGISTER LINK */}
             <View style={styles.registerContainer}>
               <Text style={styles.registerText}>Don't have an account?</Text>
               <TouchableOpacity
                 onPress={() => router.push("/register" as const)}
                 disabled={loading}
+                activeOpacity={0.7}
               >
                 <Text style={styles.registerLink}>Create Account</Text>
               </TouchableOpacity>
@@ -142,21 +151,116 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#F7F7F8" },
-  keyboardView: { flex: 1 },
-  scrollContent: { flexGrow: 1, justifyContent: "center" },
-  container: { width: "100%", maxWidth: 500, alignSelf: "center", paddingHorizontal: 24, paddingVertical: 30 },
-  logo: { width: 70, height: 70, borderRadius: 20, backgroundColor: "#111111", alignItems: "center", justifyContent: "center", alignSelf: "center", marginBottom: 24 },
-  logoText: { color: "#FFFFFF", fontSize: 36, fontWeight: "800" },
-  title: { fontSize: 30, fontWeight: "800", color: "#111111", textAlign: "center" },
-  subtitle: { fontSize: 15, color: "#6B7280", textAlign: "center", marginTop: 8, marginBottom: 32 },
-  inputGroup: { marginBottom: 18 },
-  label: { fontSize: 14, fontWeight: "600", color: "#374151", marginBottom: 8 },
-  input: { height: 54, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#D1D5DB", borderRadius: 13, paddingHorizontal: 16, color: "#111111", fontSize: 15 },
-  loginButton: { height: 54, borderRadius: 13, backgroundColor: "#111111", alignItems: "center", justifyContent: "center", marginTop: 5 },
-  buttonDisabled: { opacity: 0.6 },
-  loginButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "700" },
-  registerContainer: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginTop: 25 },
-  registerText: { color: "#6B7280", fontSize: 14 },
-  registerLink: { color: "#111111", fontSize: 14, fontWeight: "700", marginLeft: 5 },
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#0A0A0C",
+  },
+  keyboardView: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    justifyContent: "center",
+  },
+  container: {
+    width: "100%",
+    maxWidth: 440,
+    alignSelf: "center",
+    paddingHorizontal: 28,
+    paddingVertical: 36,
+  },
+  logo: {
+    width: 72,
+    height: 72,
+    borderRadius: 22,
+    backgroundColor: "#16161A",
+    borderWidth: 1.5,
+    borderColor: "#EAB308",
+    alignItems: "center",
+    justifyContent: "center",
+    alignSelf: "center",
+    marginBottom: 28,
+    shadowColor: "#EAB308",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  logoText: {
+    color: "#EAB308",
+    fontSize: 38,
+    fontWeight: "900",
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "800",
+    color: "#F4F4F5",
+    textAlign: "center",
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#A1A1AA",
+    textAlign: "center",
+    marginTop: 8,
+    marginBottom: 36,
+  },
+  inputGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#D4D4D8",
+    marginBottom: 8,
+    letterSpacing: 0.2,
+  },
+  input: {
+    height: 52,
+    backgroundColor: "#16161A",
+    borderWidth: 1,
+    borderColor: "#27272A",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    color: "#F4F4F5",
+    fontSize: 15,
+  },
+  loginButton: {
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: "#EAB308",
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 10,
+    shadowColor: "#EAB308",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  buttonDisabled: {
+    opacity: 0.5,
+  },
+  loginButtonText: {
+    color: "#0A0A0C",
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 0.3,
+  },
+  registerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginTop: 28,
+  },
+  registerText: {
+    color: "#A1A1AA",
+    fontSize: 14,
+  },
+  registerLink: {
+    color: "#EAB308",
+    fontSize: 14,
+    fontWeight: "700",
+    marginLeft: 6,
+  },
 });

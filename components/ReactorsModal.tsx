@@ -69,13 +69,13 @@ export const ReactorsModal: React.FC<Props> = ({
         <View style={styles.modalContent}>
           <View style={styles.header}>
             <Text style={styles.title}>Reactions</Text>
-            <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }} activeOpacity={0.7}>
               <Text style={styles.closeText}>✕</Text>
             </TouchableOpacity>
           </View>
 
           {loading ? (
-            <ActivityIndicator style={{ marginVertical: 30 }} color="#111111" />
+            <ActivityIndicator style={{ marginVertical: 30 }} color="#EAB308" />
           ) : (
             <FlatList
               data={reactors}
@@ -104,16 +104,33 @@ export const ReactorsModal: React.FC<Props> = ({
 };
 
 const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
-  modalContent: { backgroundColor: "#FFFFFF", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, maxHeight: "60%" },
+  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "flex-end" },
+  modalContent: {
+    backgroundColor: "#16161A",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 20,
+    maxHeight: "60%",
+    borderWidth: 1,
+    borderColor: "#27272A",
+  },
   header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 },
-  title: { fontSize: 18, fontWeight: "800", color: "#111111" },
-  closeText: { fontSize: 20, color: "#777777" },
-  reactorRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#F1F1F1" },
-  avatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#111111", justifyContent: "center", alignItems: "center" },
-  avatarText: { color: "#FFFFFF", fontWeight: "700" },
-  name: { fontSize: 14, fontWeight: "700", color: "#111111" },
-  username: { fontSize: 12, color: "#777777" },
+  title: { fontSize: 18, fontWeight: "800", color: "#F4F4F5", letterSpacing: -0.3 },
+  closeText: { fontSize: 20, color: "#A1A1AA", fontWeight: "600" },
+  reactorRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#27272A" },
+  avatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 14,
+    backgroundColor: "#27272A",
+    borderWidth: 1,
+    borderColor: "#3F3F46",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  avatarText: { color: "#EAB308", fontWeight: "800", fontSize: 15 },
+  name: { fontSize: 14, fontWeight: "700", color: "#F4F4F5" },
+  username: { fontSize: 12, color: "#EAB308", marginTop: 2 },
   emoji: { fontSize: 22 },
-  empty: { textAlign: "center", color: "#888888", marginVertical: 20 },
+  empty: { textAlign: "center", color: "#71717A", marginVertical: 30 },
 });

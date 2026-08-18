@@ -303,7 +303,7 @@ export const ConfessionCard: React.FC<
             }
           >
             {item.isAnonymous
-              ? "Anonymous"
+              ? "Anonymous Student"
               : item.user?.name ||
                 item.authorName ||
                 "Anonymous User"}
@@ -548,12 +548,12 @@ function formatDate(
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 18,
-    padding: 16,
+    backgroundColor: "#16161A",
+    borderRadius: 20,
+    padding: 18,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "#EAEAEA",
+    borderColor: "#27272A",
     position: "relative",
   },
 
@@ -565,68 +565,72 @@ const styles = StyleSheet.create({
   avatar: {
     width: 42,
     height: 42,
-    borderRadius: 21,
-    backgroundColor: "#111111",
+    borderRadius: 14,
+    backgroundColor: "#27272A",
+    borderWidth: 1,
+    borderColor: "#3F3F46",
     justifyContent: "center",
     alignItems: "center",
   },
 
   avatarText: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "700",
+    color: "#EAB308",
+    fontSize: 18,
+    fontWeight: "800",
   },
 
   userInfo: {
     flex: 1,
-    marginLeft: 11,
+    marginLeft: 12,
   },
 
   userName: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#111111",
+    color: "#F4F4F5",
   },
 
   time: {
-    marginTop: 3,
+    marginTop: 2,
     fontSize: 11,
-    color: "#999999",
+    color: "#71717A",
   },
 
   more: {
-    fontSize: 17,
-    color: "#777777",
+    fontSize: 16,
+    color: "#71717A",
     letterSpacing: 2,
   },
 
   categoryBadge: {
     alignSelf: "flex-start",
-    backgroundColor: "#F1F1F1",
-    borderRadius: 20,
+    backgroundColor: "#27272A",
+    borderRadius: 12,
     paddingHorizontal: 10,
-    paddingVertical: 5,
-    marginTop: 14,
+    paddingVertical: 4,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "#3F3F46",
   },
 
   categoryText: {
     fontSize: 11,
-    fontWeight: "600",
-    color: "#555555",
+    fontWeight: "700",
+    color: "#EAB308",
   },
 
   body: {
-    color: "#222222",
+    color: "#D4D4D8",
     fontSize: 15,
     lineHeight: 23,
-    marginTop: 13,
+    marginTop: 12,
   },
 
   postImage: {
     width: "100%",
     height: 220,
-    borderRadius: 12,
-    marginTop: 12,
+    borderRadius: 14,
+    marginTop: 14,
   },
 
   reactionSummaryRow: {
@@ -636,7 +640,7 @@ const styles = StyleSheet.create({
 
   reactionSummaryText: {
     fontSize: 13,
-    color: "#666666",
+    color: "#A1A1AA",
     fontWeight: "600",
   },
 
@@ -652,8 +656,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     borderTopWidth: 1,
-    borderTopColor: "#EEEEEE",
-    marginTop: 12,
+    borderTopColor: "#27272A",
+    marginTop: 14,
     paddingTop: 12,
   },
 
@@ -670,21 +674,22 @@ const styles = StyleSheet.create({
 
   actionIcon: {
     fontSize: 18,
-    color: "#333333",
-    marginRight: 5,
+    color: "#A1A1AA",
+    marginRight: 6,
   },
 
   actionIconActive: {
-    color: "#EF4444",
+    color: "#EAB308",
   },
 
   actionText: {
-    color: "#777777",
+    color: "#A1A1AA",
     fontSize: 12,
+    fontWeight: "600",
   },
 
   actionTextActive: {
-    color: "#EF4444",
-    fontWeight: "700",
+    color: "#EAB308",
+    fontWeight: "800",
   },
 });

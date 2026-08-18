@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-
 import {
   View,
   Text,
@@ -10,6 +9,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  StatusBar,
 } from "react-native";
 
 import { router } from "expo-router";
@@ -225,6 +225,7 @@ export default function RegisterScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#0A0A0C" />
       <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -233,7 +234,11 @@ export default function RegisterScreen() {
         <View style={styles.container}>
           {/* BACK BUTTON */}
 
-          <TouchableOpacity onPress={() => router.back()} disabled={loading}>
+          <TouchableOpacity
+            onPress={() => router.back()}
+            disabled={loading}
+            activeOpacity={0.7}
+          >
             <Text style={styles.backButton}>← Back</Text>
           </TouchableOpacity>
 
@@ -259,7 +264,7 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               placeholder="Juan Dela Cruz"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor="#52525B"
               value={name}
               onChangeText={setName}
               editable={!loading}
@@ -274,7 +279,7 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               placeholder="juan_delacruz"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor="#52525B"
               value={username}
               onChangeText={setUsername}
               autoCapitalize="none"
@@ -292,7 +297,7 @@ export default function RegisterScreen() {
 
             {loadingUniversities ? (
               <View style={styles.loadingBox}>
-                <ActivityIndicator />
+                <ActivityIndicator color="#EAB308" />
 
                 <Text style={styles.loadingText}>Loading universities...</Text>
               </View>
@@ -300,7 +305,7 @@ export default function RegisterScreen() {
               <View style={styles.emptyUniversity}>
                 <Text style={styles.emptyText}>No universities available.</Text>
 
-                <TouchableOpacity onPress={loadUniversities}>
+                <TouchableOpacity onPress={loadUniversities} activeOpacity={0.7}>
                   <Text style={styles.retryText}>Retry</Text>
                 </TouchableOpacity>
               </View>
@@ -357,7 +362,7 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               placeholder="student@university.edu"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor="#52525B"
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -377,7 +382,7 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               placeholder="Create a password"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor="#52525B"
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -393,7 +398,7 @@ export default function RegisterScreen() {
             <TextInput
               style={styles.input}
               placeholder="Repeat your password"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor="#52525B"
               value={confirmPassword}
               onChangeText={setConfirmPassword}
               secureTextEntry
@@ -407,10 +412,10 @@ export default function RegisterScreen() {
             style={[styles.registerButton, loading && styles.buttonDisabled]}
             onPress={handleRegister}
             disabled={loading}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
             {loading ? (
-              <ActivityIndicator color="#FFFFFF" />
+              <ActivityIndicator color="#0A0A0C" />
             ) : (
               <Text style={styles.registerButtonText}>Create Account</Text>
             )}
@@ -424,6 +429,7 @@ export default function RegisterScreen() {
             <TouchableOpacity
               onPress={() => router.replace("/login" as const)}
               disabled={loading}
+              activeOpacity={0.7}
             >
               <Text style={styles.loginLink}>Sign In</Text>
             </TouchableOpacity>
@@ -437,189 +443,204 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F7F7F8",
+    backgroundColor: "#0A0A0C",
   },
   scrollContent: {
     flexGrow: 1,
   },
   container: {
     width: "100%",
-    maxWidth: 500,
+    maxWidth: 480,
     alignSelf: "center",
-    paddingHorizontal: 24,
-    paddingVertical: 25,
+    paddingHorizontal: 28,
+    paddingVertical: 28,
   },
   backButton: {
-    color: "#111111",
+    color: "#EAB308",
     fontSize: 15,
     fontWeight: "600",
-    marginBottom: 25,
+    marginBottom: 24,
   },
   logo: {
     width: 64,
     height: 64,
-    borderRadius: 18,
-    backgroundColor: "#111111",
+    borderRadius: 20,
+    backgroundColor: "#16161A",
+    borderWidth: 1.5,
+    borderColor: "#EAB308",
     alignItems: "center",
     justifyContent: "center",
     alignSelf: "center",
     marginBottom: 20,
+    shadowColor: "#EAB308",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 6,
   },
   logoText: {
-    color: "#FFFFFF",
-    fontSize: 32,
-    fontWeight: "800",
+    color: "#EAB308",
+    fontSize: 34,
+    fontWeight: "900",
   },
   title: {
-    color: "#111111",
-    fontSize: 28,
+    color: "#F4F4F5",
+    fontSize: 26,
     fontWeight: "800",
     textAlign: "center",
+    letterSpacing: -0.5,
   },
   subtitle: {
-    color: "#6B7280",
+    color: "#A1A1AA",
     fontSize: 14,
     lineHeight: 20,
     textAlign: "center",
     marginTop: 8,
-    marginBottom: 30,
+    marginBottom: 32,
   },
   inputGroup: {
-    marginBottom: 18,
+    marginBottom: 20,
   },
   label: {
-    color: "#374151",
-    fontSize: 14,
+    color: "#D4D4D8",
+    fontSize: 13,
     fontWeight: "600",
-    marginBottom: 7,
+    marginBottom: 8,
+    letterSpacing: 0.2,
   },
   input: {
     height: 52,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#16161A",
     borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 12,
-    paddingHorizontal: 15,
-    color: "#111111",
+    borderColor: "#27272A",
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    color: "#F4F4F5",
     fontSize: 15,
   },
   helper: {
-    color: "#9CA3AF",
+    color: "#71717A",
     fontSize: 12,
-    marginTop: 5,
+    marginTop: 6,
   },
   loadingBox: {
     height: 55,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#16161A",
     borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 12,
+    borderColor: "#27272A",
+    borderRadius: 14,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
   },
   loadingText: {
-    color: "#6B7280",
+    color: "#A1A1AA",
     fontSize: 13,
     marginLeft: 8,
   },
   emptyUniversity: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#16161A",
     borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 12,
-    padding: 16,
+    borderColor: "#27272A",
+    borderRadius: 14,
+    padding: 18,
     alignItems: "center",
   },
   emptyText: {
-    color: "#6B7280",
+    color: "#A1A1AA",
     fontSize: 13,
   },
   retryText: {
-    color: "#111111",
+    color: "#EAB308",
     fontWeight: "700",
     fontSize: 13,
     marginTop: 8,
   },
   universityList: {
-    gap: 8,
+    gap: 10,
   },
   universityOption: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#16161A",
     borderWidth: 1,
-    borderColor: "#D1D5DB",
-    borderRadius: 12,
-    padding: 13,
+    borderColor: "#27272A",
+    borderRadius: 14,
+    padding: 14,
   },
   universityOptionSelected: {
-    borderColor: "#111111",
-    backgroundColor: "#F3F4F6",
+    borderColor: "#EAB308",
+    backgroundColor: "#1C1C22",
   },
   radio: {
     width: 20,
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    borderColor: "#9CA3AF",
+    borderColor: "#52525B",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
   },
   radioSelected: {
-    borderColor: "#111111",
+    borderColor: "#EAB308",
   },
   radioInner: {
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: "#111111",
+    backgroundColor: "#EAB308",
   },
   universityInfo: {
     flex: 1,
   },
   universityName: {
-    color: "#111111",
+    color: "#F4F4F5",
     fontSize: 14,
     fontWeight: "700",
   },
   universityDomain: {
-    color: "#6B7280",
+    color: "#A1A1AA",
     fontSize: 12,
-    marginTop: 3,
+    marginTop: 2,
   },
   registerButton: {
     height: 52,
-    borderRadius: 12,
-    backgroundColor: "#111111",
+    borderRadius: 14,
+    backgroundColor: "#EAB308",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 5,
+    marginTop: 10,
+    shadowColor: "#EAB308",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
   buttonDisabled: {
-    opacity: 0.6,
+    opacity: 0.5,
   },
   registerButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "700",
+    color: "#0A0A0C",
+    fontSize: 15,
+    fontWeight: "800",
+    letterSpacing: 0.3,
   },
   loginContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 22,
+    marginTop: 26,
     marginBottom: 20,
   },
   loginText: {
-    color: "#6B7280",
+    color: "#A1A1AA",
     fontSize: 14,
   },
   loginLink: {
-    color: "#111111",
+    color: "#EAB308",
     fontSize: 14,
     fontWeight: "700",
-    marginLeft: 5,
+    marginLeft: 6,
   },
 });

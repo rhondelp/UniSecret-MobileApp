@@ -7,7 +7,7 @@ export const apiRequest = async (
   options: RequestInit = {}
 ) => {
   try {
-    // Get saved JWT token
+
     const token = await AsyncStorage.getItem("token");
 
     const headers: Record<string, string> = {
@@ -15,7 +15,6 @@ export const apiRequest = async (
       ...(options.headers as Record<string, string> | undefined),
     };
 
-    // Add JWT if available
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }

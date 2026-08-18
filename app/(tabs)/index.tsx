@@ -8,6 +8,8 @@ import {
   RefreshControl,
   ActivityIndicator,
   Alert,
+  StatusBar,
+  Platform,
 } from "react-native";
 import { router } from "expo-router";
 import {
@@ -158,7 +160,8 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#111111" />
+        <StatusBar barStyle="light-content" backgroundColor="#0A0A0C" />
+        <ActivityIndicator size="large" color="#EAB308" />
         <Text style={styles.loadingText}>Loading UniSecret...</Text>
       </View>
     );
@@ -167,9 +170,10 @@ export default function HomeScreen() {
   if (error) {
     return (
       <View style={styles.center}>
+        <StatusBar barStyle="light-content" backgroundColor="#0A0A0C" />
         <Text style={styles.errorTitle}>Unable to load feed</Text>
         <Text style={styles.errorText}>{error}</Text>
-        <TouchableOpacity style={styles.retryButton} onPress={loadConfessions}>
+        <TouchableOpacity style={styles.retryButton} onPress={loadConfessions} activeOpacity={0.85}>
           <Text style={styles.retryText}>Try Again</Text>
         </TouchableOpacity>
       </View>
@@ -178,20 +182,27 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#0A0A0C" />
+      
+      {/* HEADER */}
       <View style={styles.header}>
         <View>
-          <Text style={styles.brand}>UniSecret</Text>
+          <Text style={styles.brand}>
+            Uni<Text style={styles.brandGold}>Secret</Text>
+          </Text>
           <Text style={styles.subtitle}>Your campus. Your stories.</Text>
         </View>
 
         <TouchableOpacity
           style={styles.notificationButton}
           onPress={() => router.push("/(tabs)/notifications")}
+          activeOpacity={0.7}
         >
           <Text style={styles.notificationIcon}>♧</Text>
         </TouchableOpacity>
       </View>
 
+      {/* FEED */}
       <FlatList
         data={confessions}
         renderItem={({ item }) => (
@@ -207,7 +218,12 @@ export default function HomeScreen() {
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={refreshFeed} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={refreshFeed}
+            tintColor="#EAB308"
+            colors={["#EAB308"]}
+          />
         }
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -219,6 +235,7 @@ export default function HomeScreen() {
         }
       />
 
+      {/* FLOATING ACTION BUTTON */}
       <TouchableOpacity
         style={styles.floatingButton}
         activeOpacity={0.85}
@@ -238,45 +255,53 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F7F7F8" },
-  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24 },
-  loadingText: { marginTop: 12, color: "#777777", fontSize: 14 },
+  container: { flex: 1, backgroundColor: "#0A0A0C" },
+  center: { flex: 1, justifyContent: "center", alignItems: "center", padding: 24, backgroundColor: "#0A0A0C" },
+  loadingText: { marginTop: 14, color: "#A1A1AA", fontSize: 14, fontWeight: "500" },
   header: {
     paddingHorizontal: 20,
-    paddingTop: 18,
+    paddingTop: Platform.OS === "android" ? 18 : 12,
     paddingBottom: 14,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#16161A",
     borderBottomWidth: 1,
-    borderBottomColor: "#EEEEEE",
+    borderBottomColor: "#27272A",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  brand: { fontSize: 24, fontWeight: "800", color: "#111111" },
-  subtitle: { marginTop: 2, fontSize: 12, color: "#888888" },
+  brand: { fontSize: 24, fontWeight: "900", color: "#F4F4F5", letterSpacing: -0.5 },
+  brandGold: { color: "#EAB308" },
+  subtitle: { marginTop: 2, fontSize: 12, color: "#A1A1AA" },
   notificationButton: {
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: "#F1F1F1",
+    backgroundColor: "#27272A",
     justifyContent: "center",
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#3F3F46",
   },
-  notificationIcon: { fontSize: 20, color: "#111111" },
+  notificationIcon: { fontSize: 20, color: "#EAB308" },
   listContent: { padding: 14, paddingBottom: 110 },
-  errorTitle: { fontSize: 20, fontWeight: "700", color: "#111111", marginTop: 15 },
-  errorText: { textAlign: "center", color: "#777777", marginTop: 8 },
+  errorTitle: { fontSize: 20, fontWeight: "700", color: "#F4F4F5", marginTop: 15 },
+  errorText: { textAlign: "center", color: "#A1A1AA", marginTop: 8, lineHeight: 20 },
   retryButton: {
     marginTop: 20,
-    backgroundColor: "#111111",
-    paddingHorizontal: 25,
+    backgroundColor: "#EAB308",
+    paddingHorizontal: 28,
     paddingVertical: 13,
     borderRadius: 12,
+    shadowColor: "#EAB308",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  retryText: { color: "#FFFFFF", fontWeight: "700" },
+  retryText: { color: "#0A0A0C", fontWeight: "800", fontSize: 14 },
   empty: { alignItems: "center", paddingTop: 80, paddingHorizontal: 30 },
-  emptyTitle: { fontSize: 20, fontWeight: "700", color: "#222222", marginTop: 15 },
-  emptyText: { color: "#888888", textAlign: "center", lineHeight: 20, marginTop: 7 },
+  emptyTitle: { fontSize: 20, fontWeight: "700", color: "#F4F4F5", marginTop: 15 },
+  emptyText: { color: "#A1A1AA", textAlign: "center", lineHeight: 20, marginTop: 8 },
   floatingButton: {
     position: "absolute",
     right: 20,
@@ -284,15 +309,19 @@ const styles = StyleSheet.create({
     width: 58,
     height: 58,
     borderRadius: 29,
-    backgroundColor: "#111111",
+    backgroundColor: "#EAB308",
     justifyContent: "center",
     alignItems: "center",
-    elevation: 5,
+    elevation: 8,
+    shadowColor: "#EAB308",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
   },
   floatingButtonText: {
-    color: "#FFFFFF",
-    fontSize: 30,
-    fontWeight: "300",
+    color: "#0A0A0C",
+    fontSize: 32,
+    fontWeight: "400",
     marginTop: -2,
   },
 });

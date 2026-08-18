@@ -11,6 +11,7 @@ import {
   Platform,
   ScrollView,
   FlatList,
+  StatusBar,
 } from "react-native";
 import { router } from "expo-router";
 import { createConfession, searchUsers, UserMention } from "../../src/api/confessionApi";
@@ -97,12 +98,14 @@ export default function CreateConfessionScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
+      <StatusBar barStyle="light-content" backgroundColor="#0A0A0C" />
       <ScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
       >
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
+          <TouchableOpacity onPress={() => router.back()} activeOpacity={0.7}>
             <Text style={styles.back}>←</Text>
           </TouchableOpacity>
           <Text style={styles.title}>New Confession</Text>
@@ -110,14 +113,14 @@ export default function CreateConfessionScreen() {
         </View>
 
         <Text style={styles.description}>
-          Share something with your university community.
+          Share something with your university community anonymously or under your handle.
         </Text>
 
         <View>
           <TextInput
             style={styles.input}
             placeholder="What's on your mind? Type @ to mention users..."
-            placeholderTextColor="#999999"
+            placeholderTextColor="#52525B"
             multiline
             textAlignVertical="top"
             value={body}
@@ -136,6 +139,7 @@ export default function CreateConfessionScreen() {
                   <TouchableOpacity
                     style={styles.suggestionRow}
                     onPress={() => insertMention(item.username)}
+                    activeOpacity={0.7}
                   >
                     <Text style={styles.suggestionName}>{item.name}</Text>
                     <Text style={styles.suggestionUsername}>@{item.username}</Text>
@@ -149,8 +153,9 @@ export default function CreateConfessionScreen() {
         <Text style={styles.counter}>{body.length}/2000</Text>
 
         <TouchableOpacity
-          style={styles.anonymousRow}
+          style={[styles.anonymousRow, anonymous && styles.anonymousRowActive]}
           onPress={() => setAnonymous(!anonymous)}
+          activeOpacity={0.85}
         >
           <View style={[styles.checkbox, anonymous && styles.checkboxActive]}>
             {anonymous && <Text style={styles.check}>✓</Text>}
@@ -168,9 +173,10 @@ export default function CreateConfessionScreen() {
           style={[styles.submitButton, loading && styles.submitDisabled]}
           onPress={submitConfession}
           disabled={loading}
+          activeOpacity={0.85}
         >
           {loading ? (
-            <ActivityIndicator color="#FFFFFF" />
+            <ActivityIndicator color="#0A0A0C" />
           ) : (
             <Text style={styles.submitText}>Submit Confession</Text>
           )}
@@ -181,89 +187,100 @@ export default function CreateConfessionScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F7F7F8" },
+  container: { flex: 1, backgroundColor: "#0A0A0C" },
   content: { padding: 20, paddingBottom: 40 },
   header: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 20,
+    paddingTop: Platform.OS === "android" ? 10 : 0,
   },
-  back: { fontSize: 28, color: "#111111" },
-  title: { fontSize: 20, fontWeight: "800", color: "#111111" },
+  back: { fontSize: 26, color: "#EAB308", fontWeight: "600" },
+  title: { fontSize: 20, fontWeight: "800", color: "#F4F4F5", letterSpacing: -0.3 },
   description: {
     fontSize: 14,
-    lineHeight: 21,
-    color: "#777777",
-    marginBottom: 18,
+    lineHeight: 20,
+    color: "#A1A1AA",
+    marginBottom: 20,
   },
   input: {
     minHeight: 220,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#16161A",
     borderWidth: 1,
-    borderColor: "#E3E3E3",
+    borderColor: "#27272A",
     borderRadius: 16,
     padding: 16,
     fontSize: 15,
-    color: "#222222",
+    color: "#F4F4F5",
+    lineHeight: 22,
   },
   suggestionsContainer: {
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#16161A",
     borderWidth: 1,
-    borderColor: "#E3E3E3",
-    borderRadius: 12,
-    maxHeight: 150,
-    marginTop: 4,
-    elevation: 3,
+    borderColor: "#27272A",
+    borderRadius: 14,
+    maxHeight: 160,
+    marginTop: 6,
+    elevation: 8,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
   suggestionRow: {
     paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: "#F1F1F1",
+    borderBottomColor: "#27272A",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  suggestionName: { fontSize: 14, fontWeight: "600", color: "#111111" },
-  suggestionUsername: { fontSize: 12, color: "#777777" },
-  counter: { textAlign: "right", color: "#999999", fontSize: 11, marginTop: 6 },
+  suggestionName: { fontSize: 14, fontWeight: "600", color: "#F4F4F5" },
+  suggestionUsername: { fontSize: 12, color: "#EAB308" },
+  counter: { textAlign: "right", color: "#71717A", fontSize: 12, marginTop: 8 },
   anonymousRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 15,
-    padding: 15,
+    backgroundColor: "#16161A",
+    borderRadius: 16,
+    padding: 16,
     marginTop: 20,
     borderWidth: 1,
-    borderColor: "#E6E6E6",
+    borderColor: "#27272A",
+  },
+  anonymousRowActive: {
+    borderColor: "#EAB308",
+    backgroundColor: "#1C1C22",
   },
   checkbox: {
-    width: 25,
-    height: 25,
+    width: 24,
+    height: 24,
     borderRadius: 7,
-    borderWidth: 1,
-    borderColor: "#BBBBBB",
+    borderWidth: 1.5,
+    borderColor: "#52525B",
     alignItems: "center",
     justifyContent: "center",
   },
-  checkboxActive: { backgroundColor: "#111111", borderColor: "#111111" },
-  check: { color: "#FFFFFF", fontWeight: "800" },
-  anonymousInfo: { flex: 1, marginLeft: 12 },
-  anonymousTitle: { fontSize: 14, fontWeight: "700", color: "#222222" },
-  anonymousText: { fontSize: 11, color: "#888888", marginTop: 3 },
+  checkboxActive: { backgroundColor: "#EAB308", borderColor: "#EAB308" },
+  check: { color: "#0A0A0C", fontWeight: "900", fontSize: 14 },
+  anonymousInfo: { flex: 1, marginLeft: 14 },
+  anonymousTitle: { fontSize: 14, fontWeight: "700", color: "#F4F4F5" },
+  anonymousText: { fontSize: 12, color: "#A1A1AA", marginTop: 3 },
   submitButton: {
-    height: 54,
-    backgroundColor: "#111111",
+    height: 52,
+    backgroundColor: "#EAB308",
     borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 25,
+    marginTop: 28,
+    shadowColor: "#EAB308",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+    elevation: 6,
   },
-  submitDisabled: { opacity: 0.6 },
-  submitText: { color: "#FFFFFF", fontSize: 15, fontWeight: "700" },
+  submitDisabled: { opacity: 0.5 },
+  submitText: { color: "#0A0A0C", fontSize: 15, fontWeight: "800", letterSpacing: 0.3 },
 });

@@ -58,7 +58,7 @@ export default function WelcomeScreen() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#070A0F" />
+      <StatusBar barStyle="light-content" backgroundColor="#0A0A0C" />
 
       <Animated.View 
         style={[
@@ -73,7 +73,7 @@ export default function WelcomeScreen() {
           <View style={styles.apiStatusBadge}>
             {apiStatus === "checking" && (
               <>
-                <ActivityIndicator size="small" color="#6366F1" style={{ marginRight: 6 }} />
+                <ActivityIndicator size="small" color="#EAB308" style={{ marginRight: 6 }} />
                 <Text style={styles.apiStatusText}>Connecting...</Text>
               </>
             )}
@@ -97,9 +97,11 @@ export default function WelcomeScreen() {
         {/* ================================= */}
         <View style={styles.heroSection}>
           <View style={styles.logoContainer}>
-            <Sparkles size={32} color="#FFFFFF" />
+            <Sparkles size={32} color="#0A0A0C" />
           </View>
-          <Text style={styles.brandName}>UniSecret</Text>
+          <Text style={styles.brandName}>
+            Uni<Text style={styles.brandGold}>Secret</Text>
+          </Text>
           <Text style={styles.tagline}>Your campus. Your anonymous voice.</Text>
         </View>
 
@@ -109,7 +111,7 @@ export default function WelcomeScreen() {
         <View style={styles.featuresContainer}>
           <View style={styles.featureRow}>
             <View style={styles.featureIconBox}>
-              <ShieldCheck size={20} color="#6366F1" />
+              <ShieldCheck size={20} color="#EAB308" />
             </View>
             <View style={styles.featureTextWrapper}>
               <Text style={styles.featureTitle}>100% Anonymous</Text>
@@ -119,7 +121,7 @@ export default function WelcomeScreen() {
 
           <View style={styles.featureRow}>
             <View style={styles.featureIconBox}>
-              <GraduationCap size={20} color="#38BDF8" />
+              <GraduationCap size={20} color="#EAB308" />
             </View>
             <View style={styles.featureTextWrapper}>
               <Text style={styles.featureTitle}>Campus Exclusive</Text>
@@ -129,7 +131,7 @@ export default function WelcomeScreen() {
 
           <View style={styles.featureRow}>
             <View style={styles.featureIconBox}>
-              <MessageSquareQuote size={20} color="#EC4899" />
+              <MessageSquareQuote size={20} color="#EAB308" />
             </View>
             <View style={styles.featureTextWrapper}>
               <Text style={styles.featureTitle}>Unfiltered Stories</Text>
@@ -148,7 +150,7 @@ export default function WelcomeScreen() {
             onPress={() => router.push("/login")}
           >
             <Text style={styles.primaryButtonText}>Sign In</Text>
-            <ArrowRight size={18} color="#FFFFFF" style={{ marginLeft: 8 }} />
+            <ArrowRight size={18} color="#0A0A0C" style={{ marginLeft: 8 }} />
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -172,33 +174,33 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#070A0F", // Deep ultra-modern obsidian backdrop
+    backgroundColor: "#0A0A0C", // Obsidian dark backdrop
   },
   container: {
     flex: 1,
     paddingHorizontal: 24,
     justifyContent: "space-between",
-    paddingBottom: 20,
+    paddingBottom: 24,
   },
   
   // TOP BAR
   topHeader: {
     alignItems: "flex-end",
-    paddingTop: 10,
+    paddingTop: 12,
   },
   apiStatusBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#121826",
+    backgroundColor: "#16161A",
     paddingVertical: 6,
     paddingHorizontal: 12,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#1E293B",
+    borderColor: "#27272A",
   },
   apiStatusText: {
     fontSize: 11.5,
-    color: "#94A3B8",
+    color: "#A1A1AA",
     fontWeight: "600",
   },
 
@@ -211,36 +213,39 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 22,
-    backgroundColor: "#6366F1",
+    backgroundColor: "#EAB308",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 14,
-    shadowColor: "#6366F1",
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 10,
+    marginBottom: 16,
+    shadowColor: "#EAB308",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    elevation: 8,
   },
   brandName: {
-    fontSize: 28,
+    fontSize: 30,
     fontWeight: "900",
-    color: "#F8FAFC",
-    letterSpacing: 0.5,
+    color: "#F4F4F5",
+    letterSpacing: -0.5,
+  },
+  brandGold: {
+    color: "#EAB308",
   },
   tagline: {
-    fontSize: 13.5,
-    color: "#94A3B8",
-    marginTop: 4,
+    fontSize: 14,
+    color: "#A1A1AA",
+    marginTop: 6,
     fontWeight: "500",
   },
 
   // FEATURES CARD CONTAINER
   featuresContainer: {
-    backgroundColor: "#111827",
+    backgroundColor: "#16161A",
     borderRadius: 20,
-    padding: 16,
+    padding: 18,
     borderWidth: 1,
-    borderColor: "#1F2937",
+    borderColor: "#27272A",
     gap: 16,
     marginVertical: 10,
   },
@@ -252,7 +257,9 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 12,
-    backgroundColor: "#1F2937",
+    backgroundColor: "#27272A",
+    borderWidth: 1,
+    borderColor: "#3F3F46",
     justifyContent: "center",
     alignItems: "center",
     marginRight: 14,
@@ -263,12 +270,12 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#F1F5F9",
-    marginBottom: 1,
+    color: "#F4F4F5",
+    marginBottom: 2,
   },
   featureDesc: {
     fontSize: 12,
-    color: "#94A3B8",
+    color: "#A1A1AA",
     lineHeight: 16,
   },
 
@@ -280,34 +287,35 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   primaryButton: {
-    height: 54,
+    height: 52,
     borderRadius: 14,
-    backgroundColor: "#6366F1",
+    backgroundColor: "#EAB308",
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#6366F1",
-    shadowOffset: { width: 0, height: 6 },
+    shadowColor: "#EAB308",
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 6,
   },
   primaryButtonText: {
-    color: "#FFFFFF",
+    color: "#0A0A0C",
     fontSize: 15.5,
-    fontWeight: "700",
+    fontWeight: "800",
+    letterSpacing: 0.2,
   },
   secondaryButton: {
-    height: 54,
+    height: 52,
     borderRadius: 14,
-    backgroundColor: "#121826",
+    backgroundColor: "#16161A",
     borderWidth: 1,
-    borderColor: "#1E293B",
+    borderColor: "#27272A",
     justifyContent: "center",
     alignItems: "center",
   },
   secondaryButtonText: {
-    color: "#E2E8F0",
+    color: "#F4F4F5",
     fontSize: 15.5,
     fontWeight: "700",
   },
