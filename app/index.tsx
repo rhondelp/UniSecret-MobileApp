@@ -1,24 +1,24 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   ActivityIndicator,
   Animated,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { apiRequest } from "../src/api/api";
-import { 
-  ShieldCheck, 
-  GraduationCap, 
-  MessageSquareQuote, 
-  ArrowRight, 
+import {
+  ShieldCheck,
+  GraduationCap,
+  MessageSquareQuote,
+  ArrowRight,
   Sparkles,
   Wifi,
-  WifiOff
+  WifiOff,
+  Lock,
 } from "lucide-react-native";
 
 export default function WelcomeScreen() {
@@ -27,7 +27,9 @@ export default function WelcomeScreen() {
   >("checking");
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
+  const slideAnim = useRef(new Animated.Value(40)).current;
+  const bubble1 = useRef(new Animated.Value(20)).current;
+  const bubble2 = useRef(new Animated.Value(-15)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -36,9 +38,25 @@ export default function WelcomeScreen() {
         duration: 700,
         useNativeDriver: true,
       }),
-      Animated.timing(slideAnim, {
+
+      Animated.spring(slideAnim, {
         toValue: 0,
-        duration: 700,
+        tension: 45,
+        friction: 8,
+        useNativeDriver: true,
+      }),
+
+      Animated.spring(bubble1, {
+        toValue: 0,
+        tension: 35,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+
+      Animated.spring(bubble2, {
+        toValue: 0,
+        tension: 35,
+        friction: 7,
         useNativeDriver: true,
       }),
     ]).start();
@@ -57,266 +75,245 @@ export default function WelcomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor="#0A0A0C" />
+    <SafeAreaView className="flex-1 bg-[#080809]">
+      <StatusBar barStyle="light-content" backgroundColor="#080809" />
 
-      <Animated.View 
-        style={[
-          styles.container, 
-          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }
-        ]}
+      {/* ───────────── AMBIENT BACKGROUND ───────────── */}
+
+      <View
+        pointerEvents="none"
+        className="absolute -right-[130px] top-[150px] h-[300px] w-[300px] rounded-full bg-[#EAB308]/[0.04]"
+      />
+
+      <View
+        pointerEvents="none"
+        className="absolute -left-[170px] bottom-[120px] h-[340px] w-[340px] rounded-full bg-[#EAB308]/[0.025]"
+      />
+
+      <Animated.View
+        className="flex-1 px-5"
+        style={{
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+        }}
       >
-        {/* ================================= */}
-        {/* TOP STATUS BAR PILL */}
-        {/* ================================= */}
-        <View style={styles.topHeader}>
-          <View style={styles.apiStatusBadge}>
+        {/* ───────────── HEADER ───────────── */}
+
+        <View className="flex-row items-center justify-between pt-2">
+          <View className="flex-row items-center">
+            <View className="h-[8px] w-[8px] rounded-full bg-[#EAB308]" />
+
+            <Text className="ml-2 text-[10px] font-black uppercase tracking-[2px] text-[#71717A]">
+              UniSecret
+            </Text>
+          </View>
+
+          <View className="flex-row items-center rounded-full border border-[#27272A] bg-[#111113] px-3 py-1.5">
             {apiStatus === "checking" && (
               <>
-                <ActivityIndicator size="small" color="#EAB308" style={{ marginRight: 6 }} />
-                <Text style={styles.apiStatusText}>Connecting...</Text>
+                <ActivityIndicator size="small" color="#EAB308" />
+                <Text className="ml-2 text-[9px] font-bold text-[#71717A]">
+                  CONNECTING
+                </Text>
               </>
             )}
+
             {apiStatus === "connected" && (
               <>
-                <Wifi size={13} color="#22C55E" style={{ marginRight: 6 }} />
-                <Text style={[styles.apiStatusText, { color: "#22C55E" }]}>Network Active</Text>
+                <View className="h-1.5 w-1.5 rounded-full bg-[#4ADE80]" />
+                <Wifi size={11} color="#4ADE80" className="ml-1.5" />
+                <Text className="ml-1.5 text-[9px] font-bold text-[#4ADE80]">
+                  ONLINE
+                </Text>
               </>
             )}
+
             {apiStatus === "failed" && (
               <>
-                <WifiOff size={13} color="#EF4444" style={{ marginRight: 6 }} />
-                <Text style={[styles.apiStatusText, { color: "#EF4444" }]}>Offline Mode</Text>
+                <View className="h-1.5 w-1.5 rounded-full bg-[#F87171]" />
+                <WifiOff size={11} color="#F87171" className="ml-1.5" />
+                <Text className="ml-1.5 text-[9px] font-bold text-[#F87171]">
+                  OFFLINE
+                </Text>
               </>
             )}
           </View>
         </View>
 
-        {/* ================================= */}
-        {/* HERO BRANDING */}
-        {/* ================================= */}
-        <View style={styles.heroSection}>
-          <View style={styles.logoContainer}>
-            <Sparkles size={32} color="#0A0A0C" />
+        {/* ───────────── HERO ───────────── */}
+
+        <View className="mt-10">
+          <View className="flex-row items-center">
+            <View className="h-[45px] w-[45px] items-center justify-center rounded-[15px] bg-[#EAB308]">
+              <Sparkles size={22} color="#080809" />
+            </View>
+
+            <View className="ml-3">
+              <Text className="text-[10px] font-bold uppercase tracking-[1.8px] text-[#71717A]">
+                Your campus
+              </Text>
+
+              <Text className="text-[12px] font-bold text-[#D4D4D8]">
+                Your space
+              </Text>
+            </View>
           </View>
-          <Text style={styles.brandName}>
-            Uni<Text style={styles.brandGold}>Secret</Text>
+
+          <Text className="mt-8 text-[46px] font-black leading-[48px] tracking-[-2.5px] text-[#FAFAFA]">
+            No names.
           </Text>
-          <Text style={styles.tagline}>Your campus. Your anonymous voice.</Text>
+
+          <Text className="text-[46px] font-black leading-[48px] tracking-[-2.5px] text-[#FAFAFA]">
+            No filters.
+          </Text>
+
+          <View className="mt-1 flex-row items-center">
+            <Text className="text-[46px] font-black leading-[48px] tracking-[-2.5px] text-[#EAB308]">
+              Just real talk.
+            </Text>
+          </View>
+
+          <Text className="mt-5 max-w-[340px] text-[13px] leading-[20px] text-[#77777F]">
+            Share what's on your mind, discover what your campus is really
+            talking about, and stay completely anonymous.
+          </Text>
         </View>
 
-        {/* ================================= */}
-        {/* INTERACTIVE FEATURE LIST */}
-        {/* ================================= */}
-        <View style={styles.featuresContainer}>
-          <View style={styles.featureRow}>
-            <View style={styles.featureIconBox}>
-              <ShieldCheck size={20} color="#EAB308" />
-            </View>
-            <View style={styles.featureTextWrapper}>
-              <Text style={styles.featureTitle}>100% Anonymous</Text>
-              <Text style={styles.featureDesc}>Express thoughts safely without identity traces.</Text>
-            </View>
-          </View>
+        {/* ───────────── FLOATING CONVERSATIONS ───────────── */}
 
-          <View style={styles.featureRow}>
-            <View style={styles.featureIconBox}>
-              <GraduationCap size={20} color="#EAB308" />
-            </View>
-            <View style={styles.featureTextWrapper}>
-              <Text style={styles.featureTitle}>Campus Exclusive</Text>
-              <Text style={styles.featureDesc}>Isolated communities strictly for verified students.</Text>
-            </View>
-          </View>
-
-          <View style={styles.featureRow}>
-            <View style={styles.featureIconBox}>
-              <MessageSquareQuote size={20} color="#EAB308" />
-            </View>
-            <View style={styles.featureTextWrapper}>
-              <Text style={styles.featureTitle}>Unfiltered Stories</Text>
-              <Text style={styles.featureDesc}>Confessions, advice, and real campus chatter.</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* ================================= */}
-        {/* BOTTOM ACTION BUTTONS */}
-        {/* ================================= */}
-        <View style={styles.actionSection}>
-          <TouchableOpacity
-            style={styles.primaryButton}
-            activeOpacity={0.85}
-            onPress={() => router.push("/login")}
+        <View className="relative mt-8 h-[155px]">
+          {/* Bubble 1 */}
+          <Animated.View
+            style={{
+              transform: [{ translateY: bubble1 }],
+            }}
+            className="absolute left-0 top-0 w-[78%]"
           >
-            <Text style={styles.primaryButtonText}>Sign In</Text>
-            <ArrowRight size={18} color="#0A0A0C" style={{ marginLeft: 8 }} />
+            <View className="rounded-[20px] rounded-bl-[6px] border border-[#303035] bg-[#151517] px-4 py-3.5">
+              <View className="flex-row items-center">
+                <View className="h-7 w-7 items-center justify-center rounded-full bg-[#EAB308]/10">
+                  <MessageSquareQuote size={14} color="#EAB308" />
+                </View>
+
+                <Text className="ml-2 text-[10px] font-bold text-[#71717A]">
+                  ANONYMOUS
+                </Text>
+              </View>
+
+              <Text className="mt-2 text-[12px] font-semibold leading-[17px] text-[#D4D4D8]">
+                “Anyone else feel like finals came way too fast?”
+              </Text>
+            </View>
+          </Animated.View>
+
+          {/* Bubble 2 */}
+          <Animated.View
+            style={{
+              transform: [{ translateY: bubble2 }],
+            }}
+            className="absolute right-0 top-[76px] w-[73%]"
+          >
+            <View className="rounded-[20px] rounded-br-[6px] border border-[#3D3210] bg-[#1A170C] px-4 py-3.5">
+              <View className="flex-row items-center">
+                <View className="h-7 w-7 items-center justify-center rounded-full bg-[#EAB308]">
+                  <GraduationCap size={14} color="#080809" />
+                </View>
+
+                <Text className="ml-2 text-[10px] font-bold text-[#A98C24]">
+                  CAMPUS TALK
+                </Text>
+              </View>
+
+              <Text className="mt-2 text-[12px] font-semibold leading-[17px] text-[#E7D89E]">
+                “I finally found people who get it.”
+              </Text>
+            </View>
+          </Animated.View>
+        </View>
+
+        {/* ───────────── TRUST INDICATORS ───────────── */}
+
+        <View className="mt-2 flex-row items-center">
+          <View className="flex-row items-center">
+            <ShieldCheck size={13} color="#EAB308" />
+
+            <Text className="ml-1.5 text-[10px] font-semibold text-[#71717A]">
+              Anonymous
+            </Text>
+          </View>
+
+          <View className="mx-3 h-3 w-px bg-[#3F3F46]" />
+
+          <View className="flex-row items-center">
+            <Lock size={12} color="#EAB308" />
+
+            <Text className="ml-1.5 text-[10px] font-semibold text-[#71717A]">
+              Private
+            </Text>
+          </View>
+
+          <View className="mx-3 h-3 w-px bg-[#3F3F46]" />
+
+          <View className="flex-row items-center">
+            <GraduationCap size={13} color="#EAB308" />
+
+            <Text className="ml-1.5 text-[10px] font-semibold text-[#71717A]">
+              Campus
+            </Text>
+          </View>
+        </View>
+
+        {/* ───────────── FLEX SPACE ───────────── */}
+
+        <View className="flex-1" />
+
+        {/* ───────────── CTA ───────────── */}
+
+        <View className="pb-5 pt-6">
+          <TouchableOpacity
+            className="h-[58px] flex-row items-center justify-between rounded-[18px] bg-[#EAB308] px-5"
+            activeOpacity={0.82}
+            onPress={() => router.push("/login")}
+            style={{
+              shadowColor: "#EAB308",
+              shadowOffset: {
+                width: 0,
+                height: 8,
+              },
+              shadowOpacity: 0.2,
+              shadowRadius: 16,
+              elevation: 8,
+            }}
+          >
+            <View className="flex-row items-center">
+              <View className="h-8 w-8 items-center justify-center rounded-full bg-[#080809]/10">
+                <ArrowRight size={16} color="#080809" />
+              </View>
+
+              <Text className="ml-3 text-[15px] font-black text-[#080809]">
+                Enter UniSecret
+              </Text>
+            </View>
+
+            <Text className="text-[10px] font-bold uppercase tracking-[1px] text-[#715400]">
+              Sign In
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.secondaryButton}
-            activeOpacity={0.85}
+            className="mt-3 h-[48px] items-center justify-center"
+            activeOpacity={0.7}
             onPress={() => router.push("/register")}
           >
-            <Text style={styles.secondaryButtonText}>Create an Account</Text>
+            <Text className="text-[12.5px] font-semibold text-[#71717A]">
+              New to UniSecret?{" "}
+              <Text className="font-bold text-[#E4E4E7]">
+                Create an account
+              </Text>
+            </Text>
           </TouchableOpacity>
         </View>
-
       </Animated.View>
     </SafeAreaView>
   );
 }
-
-// =======================================
-// STYLESHEET
-// =======================================
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#0A0A0C", // Obsidian dark backdrop
-  },
-  container: {
-    flex: 1,
-    paddingHorizontal: 24,
-    justifyContent: "space-between",
-    paddingBottom: 24,
-  },
-  
-  // TOP BAR
-  topHeader: {
-    alignItems: "flex-end",
-    paddingTop: 12,
-  },
-  apiStatusBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#16161A",
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: "#27272A",
-  },
-  apiStatusText: {
-    fontSize: 11.5,
-    color: "#A1A1AA",
-    fontWeight: "600",
-  },
-
-  // HERO SECTION
-  heroSection: {
-    alignItems: "center",
-    marginVertical: 10,
-  },
-  logoContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 22,
-    backgroundColor: "#EAB308",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 16,
-    shadowColor: "#EAB308",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.35,
-    shadowRadius: 14,
-    elevation: 8,
-  },
-  brandName: {
-    fontSize: 30,
-    fontWeight: "900",
-    color: "#F4F4F5",
-    letterSpacing: -0.5,
-  },
-  brandGold: {
-    color: "#EAB308",
-  },
-  tagline: {
-    fontSize: 14,
-    color: "#A1A1AA",
-    marginTop: 6,
-    fontWeight: "500",
-  },
-
-  // FEATURES CARD CONTAINER
-  featuresContainer: {
-    backgroundColor: "#16161A",
-    borderRadius: 20,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: "#27272A",
-    gap: 16,
-    marginVertical: 10,
-  },
-  featureRow: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  featureIconBox: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: "#27272A",
-    borderWidth: 1,
-    borderColor: "#3F3F46",
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 14,
-  },
-  featureTextWrapper: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#F4F4F5",
-    marginBottom: 2,
-  },
-  featureDesc: {
-    fontSize: 12,
-    color: "#A1A1AA",
-    lineHeight: 16,
-  },
-
-  // ACTION SECTION
-  actionSection: {
-    width: "100%",
-    maxWidth: 450,
-    alignSelf: "center",
-    gap: 12,
-  },
-  primaryButton: {
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: "#EAB308",
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    shadowColor: "#EAB308",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  primaryButtonText: {
-    color: "#0A0A0C",
-    fontSize: 15.5,
-    fontWeight: "800",
-    letterSpacing: 0.2,
-  },
-  secondaryButton: {
-    height: 52,
-    borderRadius: 14,
-    backgroundColor: "#16161A",
-    borderWidth: 1,
-    borderColor: "#27272A",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  secondaryButtonText: {
-    color: "#F4F4F5",
-    fontSize: 15.5,
-    fontWeight: "700",
-  },
-});

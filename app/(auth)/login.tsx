@@ -20,6 +20,16 @@ import { useAuth } from "../../context/AuthContext";
 
 import SweetAlert from "../../components/SweetAlert";
 
+import {
+  ArrowLeft,
+  ArrowRight,
+  ShieldCheck,
+  LockKeyhole,
+  Mail,
+  KeyRound,
+  Sparkles,
+} from "lucide-react-native";
+
 export default function LoginScreen() {
   // =========================
   // FORM STATE
@@ -111,7 +121,7 @@ export default function LoginScreen() {
 
     return {
       borderColor: focused ? "#EAB308" : "#27272A",
-      backgroundColor: focused ? "#18181B" : "#111113",
+      backgroundColor: focused ? "#151518" : "#101012",
     };
   };
 
@@ -121,12 +131,24 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaView
-      className="flex-1 bg-[#09090B]"
+      className="flex-1 bg-[#080809]"
       edges={["top", "bottom"]}
     >
       <StatusBar
         barStyle="light-content"
-        backgroundColor="#09090B"
+        backgroundColor="#080809"
+      />
+
+      {/* ───────────────── BACKGROUND ───────────────── */}
+
+      <View
+        pointerEvents="none"
+        className="absolute -right-[140px] top-[40px] h-[300px] w-[300px] rounded-full bg-[#EAB308]/[0.035]"
+      />
+
+      <View
+        pointerEvents="none"
+        className="absolute -left-[180px] bottom-[-100px] h-[350px] w-[350px] rounded-full bg-[#EAB308]/[0.025]"
       />
 
       <KeyboardAvoidingView
@@ -136,179 +158,241 @@ export default function LoginScreen() {
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
-            justifyContent: "center",
-            paddingBottom: 30,
+            paddingBottom: 24,
           }}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           <View className="mx-auto w-full max-w-[500px] px-5">
 
-            {/* =========================
-                TOP BAR
-            ========================= */}
+            {/* ───────────────── TOP BAR ───────────────── */}
 
-            <View className="flex-row items-center justify-between pt-2">
+            <View className="flex-row items-center justify-between pt-3">
               <TouchableOpacity
                 onPress={() => router.back()}
                 disabled={loading}
                 activeOpacity={0.7}
-                className="h-10 w-10 items-center justify-center rounded-full bg-[#141416]"
+                className="h-11 w-11 items-center justify-center rounded-full border border-[#27272A] bg-[#111113]"
               >
-                <Text className="mt-[-2px] text-[27px] font-light text-[#EAB308]">
-                  ‹
-                </Text>
+                <ArrowLeft
+                  size={19}
+                  color="#D4D4D8"
+                  strokeWidth={2}
+                />
               </TouchableOpacity>
 
               <View className="flex-row items-center">
-                <View className="h-1.5 w-6 rounded-full bg-[#EAB308]" />
+                <View className="h-1.5 w-8 rounded-full bg-[#EAB308]" />
 
                 <View className="ml-1.5 h-1.5 w-1.5 rounded-full bg-[#3F3F46]" />
 
                 <View className="ml-1.5 h-1.5 w-1.5 rounded-full bg-[#3F3F46]" />
               </View>
 
-              <View className="w-10" />
+              <View className="w-11" />
             </View>
 
-            {/* =========================
-                HERO
-            ========================= */}
+            {/* ───────────────── BRAND / HERO ───────────────── */}
 
-            <View className="mb-9 mt-10">
-              {/* LOGO */}
+            <View className="mt-10">
+              <View className="flex-row items-center">
+                <View className="relative">
+                  <View className="absolute -inset-2 rounded-[20px] bg-[#EAB308]/[0.06]" />
 
-              <View className="mb-6 h-[62px] w-[62px] items-center justify-center rounded-[19px] bg-[#EAB308]">
-                <Text className="text-[31px] font-black text-[#09090B]">
-                  U
+                  <View className="h-[58px] w-[58px] items-center justify-center rounded-[18px] bg-[#EAB308]">
+                    <Sparkles
+                      size={25}
+                      color="#080809"
+                      strokeWidth={2.2}
+                    />
+                  </View>
+                </View>
+
+                <View className="ml-4">
+                  <Text className="text-[10px] font-bold uppercase tracking-[2px] text-[#71717A]">
+                    Welcome back
+                  </Text>
+
+                  <Text className="mt-0.5 text-[14px] font-bold text-[#E4E4E7]">
+                    Uni
+                    <Text className="text-[#EAB308]">
+                      Secret
+                    </Text>
+                  </Text>
+                </View>
+              </View>
+
+              <Text className="mt-8 text-[38px] font-black leading-[42px] tracking-[-1.8px] text-[#FAFAFA]">
+                Your campus
+              </Text>
+
+              <Text className="text-[38px] font-black leading-[42px] tracking-[-1.8px] text-[#EAB308]">
+                is waiting.
+              </Text>
+
+              <Text className="mt-4 max-w-[340px] text-[13px] leading-[20px] text-[#71717A]">
+                Sign in with your university account and
+                return to the conversation.
+              </Text>
+            </View>
+
+            {/* ───────────────── TRUST STRIP ───────────────── */}
+
+            <View className="mt-7 flex-row items-center rounded-[16px] border border-[#27272A] bg-[#101012] px-4 py-3">
+              <View className="h-8 w-8 items-center justify-center rounded-[10px] bg-[#EAB308]/10">
+                <ShieldCheck size={16} color="#EAB308" />
+              </View>
+
+              <View className="ml-3 flex-1">
+                <Text className="text-[11px] font-bold text-[#D4D4D8]">
+                  Your identity stays private
+                </Text>
+
+                <Text className="mt-0.5 text-[9.5px] text-[#5F5F67]">
+                  University verification never becomes your public identity.
                 </Text>
               </View>
 
-              {/* TITLE */}
-
-              <Text className="text-[31px] font-extrabold tracking-[-1px] text-[#FAFAFA]">
-                Welcome back.
-              </Text>
-
-              <Text className="mt-2.5 max-w-[330px] text-[14px] leading-[21px] text-[#71717A]">
-                Sign in to continue to your anonymous university
-                community.
-              </Text>
+              <LockKeyhole size={15} color="#52525B" />
             </View>
 
-            {/* =========================
-                LOGIN CARD
-            ========================= */}
+            {/* ───────────────── FORM ───────────────── */}
 
-            <View className="rounded-[22px] border border-[#202024] bg-[#101012] p-5">
+            <View className="mt-7">
 
-              {/* CARD HEADER */}
-
-              <View className="mb-6">
-                <Text className="text-[17px] font-bold text-[#FAFAFA]">
-                  Sign in
-                </Text>
-
-                <Text className="mt-1 text-[12px] text-[#66666F]">
-                  Use your university account credentials.
-                </Text>
-              </View>
-
-              {/* =========================
-                  EMAIL
-              ========================= */}
+              {/* EMAIL */}
 
               <View className="mb-5">
-                <Text className="mb-2.5 text-[13px] font-semibold text-[#D4D4D8]">
+                <Text className="mb-2.5 ml-1 text-[11px] font-bold uppercase tracking-[1.1px] text-[#71717A]">
                   Institutional Email
                 </Text>
 
-                <TextInput
-                  className="h-[56px] rounded-[16px] border px-4 text-[16px] text-[#F4F4F5]"
-                  style={getInputStyle("email")}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="student@university.edu"
-                  placeholderTextColor="#52525B"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  editable={!loading}
-                  onFocus={() => setFocusedInput("email")}
-                  onBlur={() => setFocusedInput(null)}
-                  selectionColor="#EAB308"
-                />
+                <View className="relative">
+                  <View className="absolute left-4 top-[19px] z-10">
+                    <Mail
+                      size={17}
+                      color={
+                        focusedInput === "email"
+                          ? "#EAB308"
+                          : "#52525B"
+                      }
+                    />
+                  </View>
+
+                  <TextInput
+                    className="h-[58px] rounded-[17px] border pl-12 pr-4 text-[15px] text-[#F4F4F5]"
+                    style={getInputStyle("email")}
+                    value={email}
+                    onChangeText={setEmail}
+                    placeholder="student@university.edu"
+                    placeholderTextColor="#45454D"
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    editable={!loading}
+                    onFocus={() => setFocusedInput("email")}
+                    onBlur={() => setFocusedInput(null)}
+                    selectionColor="#EAB308"
+                  />
+                </View>
               </View>
 
-              {/* =========================
-                  PASSWORD
-              ========================= */}
+              {/* PASSWORD */}
 
-              <View className="mb-2">
-                <Text className="mb-2.5 text-[13px] font-semibold text-[#D4D4D8]">
+              <View>
+                <Text className="mb-2.5 ml-1 text-[11px] font-bold uppercase tracking-[1.1px] text-[#71717A]">
                   Password
                 </Text>
 
-                <TextInput
-                  className="h-[56px] rounded-[16px] border px-4 text-[16px] text-[#F4F4F5]"
-                  style={getInputStyle("password")}
-                  value={password}
-                  onChangeText={setPassword}
-                  placeholder="Enter your password"
-                  placeholderTextColor="#52525B"
-                  secureTextEntry
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  editable={!loading}
-                  onFocus={() => setFocusedInput("password")}
-                  onBlur={() => setFocusedInput(null)}
-                  selectionColor="#EAB308"
-                />
+                <View className="relative">
+                  <View className="absolute left-4 top-[19px] z-10">
+                    <KeyRound
+                      size={17}
+                      color={
+                        focusedInput === "password"
+                          ? "#EAB308"
+                          : "#52525B"
+                      }
+                    />
+                  </View>
+
+                  <TextInput
+                    className="h-[58px] rounded-[17px] border pl-12 pr-4 text-[15px] text-[#F4F4F5]"
+                    style={getInputStyle("password")}
+                    value={password}
+                    onChangeText={setPassword}
+                    placeholder="Enter your password"
+                    placeholderTextColor="#45454D"
+                    secureTextEntry
+                    autoCapitalize="none"
+                    autoCorrect={false}
+                    editable={!loading}
+                    onFocus={() => setFocusedInput("password")}
+                    onBlur={() => setFocusedInput(null)}
+                    selectionColor="#EAB308"
+                  />
+                </View>
               </View>
 
-              {/* =========================
-                  SIGN IN BUTTON
-              ========================= */}
+              {/* SIGN IN */}
 
               <TouchableOpacity
-                className={`mt-6 h-[58px] flex-row items-center justify-center rounded-[17px] bg-[#EAB308] ${
+                className={`mt-7 h-[58px] flex-row items-center justify-between rounded-[18px] bg-[#EAB308] px-5 ${
                   loading ? "opacity-60" : "opacity-100"
                 }`}
                 onPress={handleLogin}
                 disabled={loading}
                 activeOpacity={0.82}
+                style={{
+                  shadowColor: "#EAB308",
+                  shadowOffset: {
+                    width: 0,
+                    height: 7,
+                  },
+                  shadowOpacity: 0.18,
+                  shadowRadius: 14,
+                  elevation: 7,
+                }}
               >
                 {loading ? (
-                  <>
+                  <View className="w-full flex-row items-center justify-center">
                     <ActivityIndicator
-                      color="#09090B"
+                      color="#080809"
                       size="small"
                     />
 
-                    <Text className="ml-2.5 text-[15px] font-extrabold text-[#09090B]">
+                    <Text className="ml-2.5 text-[14px] font-extrabold text-[#080809]">
                       Signing in...
                     </Text>
-                  </>
+                  </View>
                 ) : (
                   <>
-                    <Text className="text-[15px] font-extrabold tracking-wide text-[#09090B]">
-                      Sign In
-                    </Text>
+                    <View>
+                      <Text className="text-[9px] font-bold uppercase tracking-[1.2px] text-[#735600]">
+                        Continue securely
+                      </Text>
 
-                    <Text className="ml-2 text-[19px] font-bold text-[#09090B]">
-                      →
-                    </Text>
+                      <Text className="mt-0.5 text-[15px] font-black text-[#080809]">
+                        Sign In
+                      </Text>
+                    </View>
+
+                    <View className="h-9 w-9 items-center justify-center rounded-full bg-[#080809]">
+                      <ArrowRight
+                        size={17}
+                        color="#EAB308"
+                        strokeWidth={2.5}
+                      />
+                    </View>
                   </>
                 )}
               </TouchableOpacity>
             </View>
 
-            {/* =========================
-                REGISTER
-            ========================= */}
+            {/* ───────────────── REGISTER ───────────────── */}
 
             <View className="mt-7 flex-row items-center justify-center">
-              <Text className="text-[13px] text-[#71717A]">
+              <Text className="text-[12px] text-[#66666F]">
                 New to UniSecret?
               </Text>
 
@@ -320,27 +404,26 @@ export default function LoginScreen() {
                 activeOpacity={0.7}
                 className="ml-1.5 rounded-md px-1"
               >
-                <Text className="text-[13px] font-bold text-[#EAB308]">
+                <Text className="text-[12px] font-bold text-[#EAB308]">
                   Create Account
                 </Text>
               </TouchableOpacity>
             </View>
 
-            {/* =========================
-                FOOTER
-            ========================= */}
+            {/* ───────────────── FOOTER ───────────────── */}
 
-            <Text className="mt-7 px-8 text-center text-[10px] leading-[16px] text-[#45454D]">
-              Your university identity stays separate from
-              your anonymous community activity.
-            </Text>
+            <View className="mt-7 flex-row items-center justify-center">
+              <ShieldCheck size={12} color="#45454D" />
+
+              <Text className="ml-1.5 text-center text-[9.5px] leading-[15px] text-[#45454D]">
+                Verified university access · Anonymous community identity
+              </Text>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* =========================
-          SWEET ALERT
-      ========================= */}
+      {/* ───────────────── SWEET ALERT ───────────────── */}
 
       <SweetAlert
         visible={showSuccess}

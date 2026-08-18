@@ -1,9 +1,18 @@
 import React from "react";
-import "../global.css";
-import { Stack } from "expo-router";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { AuthProvider } from "../context/AuthContext";
 
+import "../global.css";
+
+import {
+  Stack,
+} from "expo-router";
+
+import {
+  SafeAreaProvider,
+} from "react-native-safe-area-context";
+
+import {
+  AuthProvider,
+} from "../context/AuthContext";
 
 export default function RootLayout() {
   return (
@@ -12,7 +21,10 @@ export default function RootLayout() {
         <Stack
           screenOptions={{
             headerShown: false,
-            contentStyle: { backgroundColor: "#0A0A0C" },
+            contentStyle: {
+              backgroundColor:
+                "#0A0A0C",
+            },
           }}
         />
       </AuthProvider>

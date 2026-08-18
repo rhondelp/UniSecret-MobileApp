@@ -3,7 +3,6 @@ import {
   View,
   Text,
   Modal,
-  StyleSheet,
   TouchableOpacity,
   FlatList,
   TextInput,
@@ -169,30 +168,40 @@ export const CommentsModal: React.FC<Props> = ({
     return (
       <View
         key={item.id}
-        style={[styles.commentRow, isReply && styles.replyRow]}
+        className={`py-3 ${
+          isReply
+            ? "ml-5 border-l-2 border-[#EAB308] pl-3"
+            : "border-b border-[#27272A]"
+        }`}
       >
-        <View style={styles.commentHeader}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>
+        <View className="flex-row items-center">
+          <View className="h-[34px] w-[34px] items-center justify-center rounded-xl border border-[#3F3F46] bg-[#27272A]">
+            <Text className="text-[13px] font-extrabold color-[#EAB308]">
               {item.isAnonymous ? "?" : item.authorName.charAt(0).toUpperCase()}
             </Text>
           </View>
-          <View style={styles.authorInfo}>
-            <Text style={styles.author}>
+          <View className="ml-2.5">
+            <Text className="text-[13px] font-bold text-[#F4F4F5]">
               {item.authorName}{" "}
-              <Text style={styles.username}>@{item.authorUsername}</Text>
+              <Text className="text-xs font-normal color-[#EAB308]">
+                @{item.authorUsername}
+              </Text>
             </Text>
-            <Text style={styles.time}>{formatDate(item.createdAt)}</Text>
+            <Text className="mt-0.5 text-[11px] text-[#71717A]">
+              {formatDate(item.createdAt)}
+            </Text>
           </View>
         </View>
 
         {/* Comment Body with styled mentions */}
-        <Text style={styles.body}>{renderFormattedBody(item.body)}</Text>
+        <Text className="mt-2 text-sm leading-5 text-[#D4D4D8]">
+          {renderFormattedBody(item.body)}
+        </Text>
 
         {/* Action Controls */}
-        <View style={styles.commentActions}>
+        <View className="mt-2.5 flex-row gap-4">
           <TouchableOpacity
-            style={styles.actionBtn}
+            className="py-0.5"
             onPress={() => handleSelectReaction(item.id, "Like")}
             onLongPress={() =>
               setActivePickerCommentId(
@@ -201,25 +210,25 @@ export const CommentsModal: React.FC<Props> = ({
             }
             activeOpacity={0.7}
           >
-            <Text style={styles.actionText}>
+            <Text className="text-xs font-semibold text-[#A1A1AA]">
               👍 {item.likeCount > 0 ? item.likeCount : "Like"}
             </Text>
           </TouchableOpacity>
 
           {!isReply && (
             <TouchableOpacity
-              style={styles.actionBtn}
+              className="py-0.5"
               onPress={() => setReplyingTo(item)}
               activeOpacity={0.7}
             >
-              <Text style={styles.actionText}>Reply</Text>
+              <Text className="text-xs font-semibold text-[#A1A1AA]">Reply</Text>
             </TouchableOpacity>
           )}
         </View>
 
         {/* Reaction Picker Popup */}
         {activePickerCommentId === item.id && (
-          <View style={styles.pickerContainer}>
+          <View className="mt-2">
             <ReactionPicker
               onSelectReaction={(type) =>
                 handleSelectReaction(item.id, type)
@@ -238,25 +247,29 @@ export const CommentsModal: React.FC<Props> = ({
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
       <KeyboardAvoidingView
-        style={styles.overlay}
+        className="flex-1 justify-end bg-black/75"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        <View style={styles.modalContent}>
-          <View style={styles.header}>
-            <Text style={styles.title}>Comments</Text>
+        <View className="max-h-[85%] rounded-t-[24px] border border-[#27272A] bg-[#16161A] p-5">
+          <View className="mb-3.5 flex-row items-center justify-between">
+            <Text className="text-lg font-extrabold tracking-tight text-[#F4F4F5]">
+              Comments
+            </Text>
             <TouchableOpacity onPress={onClose} activeOpacity={0.7}>
-              <Text style={styles.closeText}>✕</Text>
+              <Text className="text-xl font-semibold text-[#A1A1AA]">✕</Text>
             </TouchableOpacity>
           </View>
 
           {loading ? (
-            <ActivityIndicator style={{ marginVertical: 30 }} color="#EAB308" />
+            <ActivityIndicator className="my-7" color="#EAB308" />
           ) : (
             <FlatList
               data={comments}
               keyExtractor={(item) => item.id.toString()}
               ListEmptyComponent={
-                <Text style={styles.empty}>No comments yet. Be the first!</Text>
+                <Text className="my-7 text-center text-[#71717A]">
+                  No comments yet. Be the first!
+                </Text>
               }
               renderItem={({ item }) => renderCommentItem(item)}
             />
@@ -264,37 +277,42 @@ export const CommentsModal: React.FC<Props> = ({
 
           {/* Replying Banner */}
           {replyingTo && (
-            <View style={styles.replyingBanner}>
-              <Text style={styles.replyingText}>
-                Replying to <Text style={{ fontWeight: "700", color: "#EAB308" }}>@{replyingTo.authorUsername}</Text>
+            <View className="mb-2.5 flex-row justify-between rounded-lg border border-[#3F3F46] bg-[#27272A] p-2.5">
+              <Text className="text-xs text-[#D4D4D8]">
+                Replying to{" "}
+                <Text className="font-bold color-[#EAB308]">
+                  @{replyingTo.authorUsername}
+                </Text>
               </Text>
               <TouchableOpacity onPress={() => setReplyingTo(null)} activeOpacity={0.7}>
-                <Text style={styles.cancelReplyText}>Cancel</Text>
+                <Text className="text-xs font-bold text-[#EF4444]">Cancel</Text>
               </TouchableOpacity>
             </View>
           )}
 
           {/* Mention Autocomplete Box */}
           {mentionSuggestions.length > 0 && (
-            <View style={styles.suggestionsBox}>
+            <View className="mb-2.5 max-h-[140px] rounded-xl border border-[#27272A] bg-[#16161A]">
               {mentionSuggestions.map((u) => (
                 <TouchableOpacity
                   key={u.id}
-                  style={styles.suggestionRow}
+                  className="flex-row justify-between border-b border-[#27272A] p-3"
                   onPress={() => insertMention(u.username)}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.suggestionName}>{u.name}</Text>
-                  <Text style={styles.suggestionUsername}>@{u.username}</Text>
+                  <Text className="text-[13px] font-semibold text-[#F4F4F5]">
+                    {u.name}
+                  </Text>
+                  <Text className="text-xs color-[#EAB308]">@{u.username}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           )}
 
           {/* Input Box */}
-          <View style={styles.inputContainer}>
+          <View className="mt-3 flex-row items-center gap-2.5">
             <TextInput
-              style={styles.input}
+              className="h-[46px] flex-1 rounded-full border border-[#27272A] bg-[#0A0A0C] px-4 text-sm text-[#F4F4F5]"
               placeholder={
                 replyingTo
                   ? `Reply to @${replyingTo.authorUsername}...`
@@ -305,10 +323,9 @@ export const CommentsModal: React.FC<Props> = ({
               onChangeText={handleTextChange}
             />
             <TouchableOpacity
-              style={[
-                styles.sendButton,
-                (!body.trim() || submitting) && { opacity: 0.5 },
-              ]}
+              className={`h-[46px] items-center justify-center rounded-full bg-[#EAB308] px-5 ${
+                !body.trim() || submitting ? "opacity-50" : "opacity-100"
+              }`}
               onPress={handleSubmit}
               disabled={!body.trim() || submitting}
               activeOpacity={0.85}
@@ -316,7 +333,9 @@ export const CommentsModal: React.FC<Props> = ({
               {submitting ? (
                 <ActivityIndicator color="#0A0A0C" size="small" />
               ) : (
-                <Text style={styles.sendText}>Post</Text>
+                <Text className="text-sm font-extrabold text-[#0A0A0C]">
+                  Post
+                </Text>
               )}
             </TouchableOpacity>
           </View>
@@ -331,7 +350,7 @@ function renderFormattedBody(body: string) {
   return parts.map((part, i) => {
     if (part.startsWith("@")) {
       return (
-        <Text key={i} style={styles.mentionText}>
+        <Text key={i} className="font-bold color-[#EAB308]">
           {part}
         </Text>
       );
@@ -345,94 +364,3 @@ function formatDate(dateString: string) {
   const d = new Date(dateString);
   return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString();
 }
-
-const styles = StyleSheet.create({
-  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "flex-end" },
-  modalContent: {
-    backgroundColor: "#16161A",
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    padding: 20,
-    maxHeight: "85%",
-    borderWidth: 1,
-    borderColor: "#27272A",
-  },
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 15 },
-  title: { fontSize: 18, fontWeight: "800", color: "#F4F4F5", letterSpacing: -0.3 },
-  closeText: { fontSize: 20, color: "#A1A1AA", fontWeight: "600" },
-  commentRow: { paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#27272A" },
-  replyRow: { marginLeft: 20, borderLeftWidth: 2, borderLeftColor: "#EAB308", paddingLeft: 12, borderBottomWidth: 0 },
-  commentHeader: { flexDirection: "row", alignItems: "center" },
-  avatar: {
-    width: 34,
-    height: 34,
-    borderRadius: 12,
-    backgroundColor: "#27272A",
-    borderWidth: 1,
-    borderColor: "#3F3F46",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  avatarText: { color: "#EAB308", fontWeight: "800", fontSize: 13 },
-  authorInfo: { marginLeft: 10 },
-  author: { fontWeight: "700", fontSize: 13, color: "#F4F4F5" },
-  username: { fontWeight: "400", color: "#EAB308", fontSize: 12 },
-  time: { fontSize: 11, color: "#71717A", marginTop: 1 },
-  body: { fontSize: 14, color: "#D4D4D8", marginTop: 8, lineHeight: 20 },
-  mentionText: { color: "#EAB308", fontWeight: "700" },
-  commentActions: { flexDirection: "row", gap: 16, marginTop: 10 },
-  actionBtn: { paddingVertical: 2 },
-  actionText: { fontSize: 12, color: "#A1A1AA", fontWeight: "600" },
-  pickerContainer: { marginTop: 8 },
-  replyingBanner: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    backgroundColor: "#27272A",
-    padding: 10,
-    borderRadius: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: "#3F3F46",
-  },
-  replyingText: { fontSize: 12, color: "#D4D4D8" },
-  cancelReplyText: { fontSize: 12, color: "#EF4444", fontWeight: "700" },
-  suggestionsBox: {
-    backgroundColor: "#16161A",
-    borderWidth: 1,
-    borderColor: "#27272A",
-    borderRadius: 12,
-    maxHeight: 140,
-    marginBottom: 10,
-  },
-  suggestionRow: {
-    padding: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "#27272A",
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  suggestionName: { fontSize: 13, fontWeight: "600", color: "#F4F4F5" },
-  suggestionUsername: { fontSize: 12, color: "#EAB308" },
-  empty: { textAlign: "center", color: "#71717A", marginVertical: 30 },
-  inputContainer: { flexDirection: "row", alignItems: "center", marginTop: 12, gap: 10 },
-  input: {
-    flex: 1,
-    height: 46,
-    borderWidth: 1,
-    borderColor: "#27272A",
-    borderRadius: 23,
-    paddingHorizontal: 16,
-    backgroundColor: "#0A0A0C",
-    color: "#F4F4F5",
-    fontSize: 14,
-  },
-  sendButton: {
-    backgroundColor: "#EAB308",
-    paddingHorizontal: 20,
-    height: 46,
-    borderRadius: 23,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  sendText: { color: "#0A0A0C", fontWeight: "800", fontSize: 14 },
-});

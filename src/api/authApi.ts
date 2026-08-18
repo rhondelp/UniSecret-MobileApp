@@ -13,6 +13,9 @@ export type RegisterRequest = {
   universityId: number;
 };
 
+/**
+ * LOGIN
+ */
 export const loginUser = async (
   data: LoginRequest
 ) => {
@@ -22,6 +25,9 @@ export const loginUser = async (
   });
 };
 
+/**
+ * REGISTER
+ */
 export const registerUser = async (
   data: RegisterRequest
 ) => {

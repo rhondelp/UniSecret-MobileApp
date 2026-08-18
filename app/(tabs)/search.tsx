@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   FlatList,
   TouchableOpacity,
@@ -10,7 +9,12 @@ import {
   ActivityIndicator,
   Alert,
   StatusBar,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
+
+import { SafeAreaView } from "react-native-safe-area-context";
+
 import {
   searchConfessions,
   getCategories,
@@ -21,20 +25,34 @@ import {
   Category,
   Hashtag,
 } from "../../src/api/confessionApi";
+
 import { ConfessionCard } from "../../components/ConfessionCard";
 import { useAuth } from "../../context/AuthContext";
 
 export default function SearchScreen() {
   const [query, setQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] =
+    useState<number | null>(null);
+  const [selectedTag, setSelectedTag] =
+    useState<string | null>(null);
 
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [trendingHashtags, setTrendingHashtags] = useState<Hashtag[]>([]);
-  const [results, setResults] = useState<Confession[]>([]);
-  
-  const [loading, setLoading] = useState(false);
+  const [categories, setCategories] =
+    useState<Category[]>([]);
+
+  const [trendingHashtags, setTrendingHashtags] =
+    useState<Hashtag[]>([]);
+
+  const [results, setResults] =
+    useState<Confession[]>([]);
+
+  const [loading, setLoading] =
+    useState(false);
+
   const { user } = useAuth();
+
+  // =========================
+  // LOAD SEARCH METADATA
+  // =========================
 
   useEffect(() => {
     loadMetaData();
@@ -46,40 +64,63 @@ export default function SearchScreen() {
         getCategories().catch(() => []),
         getTrendingHashtags().catch(() => []),
       ]);
+
       setCategories(cats);
       setTrendingHashtags(tags);
-    } catch (e) {
-      console.error("Error loading search metadata:", e);
+    } catch (error) {
+      console.error(
+        "Error loading search metadata:",
+        error
+      );
     }
   };
 
+  // =========================
+  // SEARCH
+  // =========================
+
   const executeSearch = useCallback(async () => {
     setLoading(true);
+
     try {
-      const res = await searchConfessions({
+      const response = await searchConfessions({
         q: query.trim() || undefined,
-        categoryId: selectedCategory ?? undefined,
-        tag: selectedTag ?? undefined,
-        universityId: user?.universityId ?? undefined,
+        categoryId:
+          selectedCategory ?? undefined,
+        tag:
+          selectedTag ?? undefined,
+        universityId:
+          user?.universityId ?? undefined,
       });
 
-      if (Array.isArray(res)) {
-        setResults(res);
-      } else if (Array.isArray(res?.data)) {
-        setResults(res.data);
-      } else if (Array.isArray(res?.items)) {
-        setResults(res.items);
+      if (Array.isArray(response)) {
+        setResults(response);
+      } else if (Array.isArray(response?.data)) {
+        setResults(response.data);
+      } else if (Array.isArray(response?.items)) {
+        setResults(response.items);
       } else {
         setResults([]);
       }
-    } catch (err) {
-      console.error("Search failed:", err);
+    } catch (error) {
+      console.error(
+        "Search failed:",
+        error
+      );
     } finally {
       setLoading(false);
     }
-  }, [query, selectedCategory, selectedTag, user?.universityId]);
+  }, [
+    query,
+    selectedCategory,
+    selectedTag,
+    user?.universityId,
+  ]);
 
-  // Debounced search trigger
+  // =========================
+  // DEBOUNCED SEARCH
+  // =========================
+
   useEffect(() => {
     const handler = setTimeout(() => {
       executeSearch();
@@ -88,219 +129,517 @@ export default function SearchScreen() {
     return () => clearTimeout(handler);
   }, [executeSearch]);
 
-  const handleToggleLike = async (item: Confession) => {
+  // =========================
+  // LIKE
+  // =========================
+
+  const handleToggleLike = async (
+    item: Confession
+  ) => {
     const previousState = [...results];
 
-    setResults((prev) =>
-      prev.map((c) => {
-        if (c.id === item.id) {
-          const newIsLiked = !c.isLiked;
-          const currentCount = c.likesCount || 0;
-          return {
-            ...c,
-            isLiked: newIsLiked,
-            likesCount: newIsLiked ? currentCount + 1 : Math.max(0, currentCount - 1),
-          };
+    setResults((previous) =>
+      previous.map((confession) => {
+        if (confession.id !== item.id) {
+          return confession;
         }
-        return c;
+
+        const newIsLiked =
+          !confession.isLiked;
+
+        const currentCount =
+          confession.likesCount || 0;
+
+        return {
+          ...confession,
+          isLiked: newIsLiked,
+          likesCount: newIsLiked
+            ? currentCount + 1
+            : Math.max(
+                0,
+                currentCount - 1
+              ),
+        };
       })
     );
 
     try {
-      const response = await toggleLike(item.id, "Confession");
-      if (typeof response?.totalLikes === "number") {
-        setResults((prev) =>
-          prev.map((c) =>
-            c.id === item.id
-              ? { ...c, isLiked: response.isLiked, likesCount: response.totalLikes }
-              : c
+      const response =
+        await toggleLike(
+          item.id,
+          "Confession"
+        );
+
+      if (
+        typeof response?.totalLikes ===
+        "number"
+      ) {
+        setResults((previous) =>
+          previous.map((confession) =>
+            confession.id === item.id
+              ? {
+                  ...confession,
+                  isLiked:
+                    response.isLiked,
+                  likesCount:
+                    response.totalLikes,
+                }
+              : confession
           )
         );
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
+
       setResults(previousState);
-      Alert.alert("Error", "Could not update like status.");
+
+      Alert.alert(
+        "Error",
+        "Could not update like status."
+      );
     }
   };
 
-  const handleToggleSave = async (item: Confession) => {
+  // =========================
+  // SAVE
+  // =========================
+
+  const handleToggleSave = async (
+    item: Confession
+  ) => {
     const previousState = [...results];
 
-    setResults((prev) =>
-      prev.map((c) => (c.id === item.id ? { ...c, isSaved: !c.isSaved } : c))
+    setResults((previous) =>
+      previous.map((confession) =>
+        confession.id === item.id
+          ? {
+              ...confession,
+              isSaved:
+                !confession.isSaved,
+            }
+          : confession
+      )
     );
 
     try {
-      const response = await toggleSave(item.id);
-      if (typeof response?.isSaved === "boolean") {
-        setResults((prev) =>
-          prev.map((c) => (c.id === item.id ? { ...c, isSaved: response.isSaved } : c))
+      const response =
+        await toggleSave(item.id);
+
+      if (
+        typeof response?.isSaved ===
+        "boolean"
+      ) {
+        setResults((previous) =>
+          previous.map((confession) =>
+            confession.id === item.id
+              ? {
+                  ...confession,
+                  isSaved:
+                    response.isSaved,
+                }
+              : confession
+          )
         );
       }
-    } catch (err) {
-      console.error(err);
+    } catch (error) {
+      console.error(error);
+
       setResults(previousState);
-      Alert.alert("Error", "Could not update save status.");
+
+      Alert.alert(
+        "Error",
+        "Could not update save status."
+      );
     }
   };
 
+  // =========================
+  // CLEAR SEARCH
+  // =========================
+
+  const clearSearch = () => {
+    setQuery("");
+  };
+
+  // =========================
+  // SCREEN
+  // =========================
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0A0A0C" />
+    <SafeAreaView
+      className="flex-1 bg-[#09090B]"
+      edges={["top"]}
+    >
+      <StatusBar
+        barStyle="light-content"
+        backgroundColor="#09090B"
+      />
 
-      {/* SEARCH HEADER */}
-      <View style={styles.header}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search campus confessions or tags..."
-          placeholderTextColor="#52525B"
-          value={query}
-          onChangeText={setQuery}
-          clearButtonMode="while-editing"
-        />
-      </View>
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={
+          Platform.OS === "ios"
+            ? "padding"
+            : undefined
+        }
+      >
+        {/* =========================
+            HEADER
+        ========================= */}
 
-      {/* TRENDING HASHTAGS */}
-      {trendingHashtags.length > 0 && (
-        <View style={styles.sectionContainer}>
-          <Text style={styles.sectionTitle}>Trending Tags</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-            {trendingHashtags.map((h) => {
-              const active = selectedTag === h.tag;
-              return (
-                <TouchableOpacity
-                  key={h.id}
-                  style={[styles.tagChip, active && styles.tagChipActive]}
-                  onPress={() => setSelectedTag(active ? null : h.tag)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.tagText, active && styles.tagTextActive]}>
-                    #{h.tag}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-      )}
+        <View className="border-b border-[#202024] bg-[#09090B] px-5 pb-4 pt-2">
 
-      {/* CATEGORIES */}
-      {categories.length > 0 && (
-        <View style={styles.sectionContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipRow}>
-            <TouchableOpacity
-              style={[
-                styles.categoryChip,
-                selectedCategory === null && styles.categoryChipActive,
-              ]}
-              onPress={() => setSelectedCategory(null)}
-              activeOpacity={0.8}
-            >
-              <Text
-                style={[
-                  styles.categoryText,
-                  selectedCategory === null && styles.categoryTextActive,
-                ]}
-              >
-                All
+          {/* BRAND ROW */}
+
+          <View className="mb-4 flex-row items-center justify-between">
+            <View>
+              <Text className="text-[25px] font-black tracking-[-1px] text-[#FAFAFA]">
+                Uni
+                <Text className="text-[#EAB308]">
+                  Secret
+                </Text>
               </Text>
-            </TouchableOpacity>
 
-            {categories.map((cat) => {
-              const active = selectedCategory === cat.id;
-              return (
-                <TouchableOpacity
-                  key={cat.id}
-                  style={[styles.categoryChip, active && styles.categoryChipActive]}
-                  onPress={() => setSelectedCategory(active ? null : cat.id)}
-                  activeOpacity={0.8}
-                >
-                  <Text style={[styles.categoryText, active && styles.categoryTextActive]}>
-                    {cat.name}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
-      )}
-
-      {/* SEARCH RESULTS FEED */}
-      {loading ? (
-        <View style={styles.center}>
-          <ActivityIndicator color="#EAB308" />
-        </View>
-      ) : (
-        <FlatList
-          data={results}
-          renderItem={({ item }) => (
-            <ConfessionCard
-              item={item}
-              onToggleLike={handleToggleLike}
-              onToggleSave={handleToggleSave}
-            />
-          )}
-          keyExtractor={(item) => item.id.toString()}
-          contentContainerStyle={styles.listContent}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.empty}>
-              <Text style={styles.emptyTitle}>No results found</Text>
-              <Text style={styles.emptyText}>
-                Try searching for different keywords or removing filters.
+              <Text className="mt-0.5 text-[11px] font-medium text-[#71717A]">
+                Discover campus stories
               </Text>
             </View>
-          }
-        />
-      )}
-    </View>
+
+            <View className="h-9 w-9 items-center justify-center rounded-[12px] border border-[#27272A] bg-[#141416]">
+              <Text className="text-[17px] text-[#EAB308]">
+                ⌕
+              </Text>
+            </View>
+          </View>
+
+          {/* SEARCH FIELD */}
+
+          <View className="h-[54px] flex-row items-center rounded-[17px] border border-[#2A2A2F] bg-[#141416] px-4">
+
+            <Text className="mr-3 text-[20px] text-[#71717A]">
+              ⌕
+            </Text>
+
+            <TextInput
+              className="flex-1 text-[15px] text-[#F4F4F5]"
+              placeholder="Search stories, topics, tags..."
+              placeholderTextColor="#52525B"
+              value={query}
+              onChangeText={setQuery}
+              clearButtonMode="while-editing"
+              returnKeyType="search"
+              autoCorrect={false}
+              autoCapitalize="none"
+            />
+
+            {query.length > 0 && (
+              <TouchableOpacity
+                onPress={clearSearch}
+                activeOpacity={0.7}
+                className="ml-2 h-7 w-7 items-center justify-center rounded-full bg-[#27272A]"
+              >
+                <Text className="text-[13px] font-bold text-[#A1A1AA]">
+                  ×
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* =========================
+            FILTER AREA
+        ========================= */}
+
+        <View className="border-b border-[#202024] bg-[#101012]">
+
+          {/* TRENDING */}
+
+          {trendingHashtags.length > 0 && (
+            <View className="py-3">
+
+              <View className="mb-2.5 flex-row items-center px-5">
+                <Text className="text-[11px] font-extrabold uppercase tracking-[1px] text-[#71717A]">
+                  Trending
+                </Text>
+
+                <View className="ml-2 h-1.5 w-1.5 rounded-full bg-[#EAB308]" />
+              </View>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={
+                  false
+                }
+                contentContainerStyle={{
+                  paddingHorizontal: 16,
+                }}
+              >
+                {trendingHashtags.map(
+                  (hashtag) => {
+                    const active =
+                      selectedTag ===
+                      hashtag.tag;
+
+                    return (
+                      <TouchableOpacity
+                        key={hashtag.id}
+                        onPress={() =>
+                          setSelectedTag(
+                            active
+                              ? null
+                              : hashtag.tag
+                          )
+                        }
+                        activeOpacity={0.75}
+                        className={`mr-2 rounded-full border px-3.5 py-2 ${
+                          active
+                            ? "border-[#EAB308] bg-[#EAB308]"
+                            : "border-[#2F2F35] bg-[#18181B]"
+                        }`}
+                      >
+                        <Text
+                          className={`text-[12px] ${
+                            active
+                              ? "font-extrabold text-[#09090B]"
+                              : "font-semibold text-[#A1A1AA]"
+                          }`}
+                        >
+                          #{hashtag.tag}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }
+                )}
+              </ScrollView>
+            </View>
+          )}
+
+          {/* CATEGORIES */}
+
+          {categories.length > 0 && (
+            <View className="border-t border-[#1F1F23] py-3">
+
+              <View className="mb-2.5 flex-row items-center px-5">
+                <Text className="text-[11px] font-extrabold uppercase tracking-[1px] text-[#71717A]">
+                  Categories
+                </Text>
+              </View>
+
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={
+                  false
+                }
+                contentContainerStyle={{
+                  paddingHorizontal: 16,
+                }}
+              >
+                {/* ALL */}
+
+                <TouchableOpacity
+                  onPress={() =>
+                    setSelectedCategory(
+                      null
+                    )
+                  }
+                  activeOpacity={0.75}
+                  className={`mr-2 rounded-full border px-4 py-2 ${
+                    selectedCategory ===
+                    null
+                      ? "border-[#EAB308] bg-[#EAB308]"
+                      : "border-[#2F2F35] bg-[#18181B]"
+                  }`}
+                >
+                  <Text
+                    className={`text-[12px] ${
+                      selectedCategory ===
+                      null
+                        ? "font-extrabold text-[#09090B]"
+                        : "font-semibold text-[#A1A1AA]"
+                    }`}
+                  >
+                    All
+                  </Text>
+                </TouchableOpacity>
+
+                {categories.map(
+                  (category) => {
+                    const active =
+                      selectedCategory ===
+                      category.id;
+
+                    return (
+                      <TouchableOpacity
+                        key={category.id}
+                        onPress={() =>
+                          setSelectedCategory(
+                            active
+                              ? null
+                              : category.id
+                          )
+                        }
+                        activeOpacity={0.75}
+                        className={`mr-2 rounded-full border px-4 py-2 ${
+                          active
+                            ? "border-[#EAB308] bg-[#EAB308]"
+                            : "border-[#2F2F35] bg-[#18181B]"
+                        }`}
+                      >
+                        <Text
+                          className={`text-[12px] ${
+                            active
+                              ? "font-extrabold text-[#09090B]"
+                              : "font-semibold text-[#A1A1AA]"
+                          }`}
+                        >
+                          {category.name}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }
+                )}
+              </ScrollView>
+            </View>
+          )}
+        </View>
+
+        {/* =========================
+            RESULTS HEADER
+        ========================= */}
+
+        <View className="flex-row items-center justify-between px-5 pb-2 pt-4">
+
+          <View>
+            <Text className="text-[14px] font-extrabold text-[#F4F4F5]">
+              {query.trim() ||
+              selectedTag ||
+              selectedCategory !== null
+                ? "Search results"
+                : "Campus stories"}
+            </Text>
+
+            {!loading &&
+              results.length > 0 && (
+                <Text className="mt-0.5 text-[11px] text-[#52525B]">
+                  {results.length}{" "}
+                  {results.length === 1
+                    ? "story"
+                    : "stories"}{" "}
+                  found
+                </Text>
+              )}
+          </View>
+
+          {(selectedTag !== null ||
+            selectedCategory !== null) && (
+            <TouchableOpacity
+              onPress={() => {
+                setSelectedTag(null);
+                setSelectedCategory(
+                  null
+                );
+              }}
+              activeOpacity={0.7}
+              className="rounded-full bg-[#211F16] px-3 py-1.5"
+            >
+              <Text className="text-[11px] font-bold text-[#EAB308]">
+                Clear filters
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* =========================
+            RESULTS
+        ========================= */}
+
+        {loading ? (
+          <View className="flex-1 items-center justify-center">
+
+            <View className="h-[64px] w-[64px] items-center justify-center rounded-[20px] border border-[#27272A] bg-[#141416]">
+              <ActivityIndicator
+                color="#EAB308"
+                size="small"
+              />
+            </View>
+
+            <Text className="mt-4 text-[12px] font-medium text-[#71717A]">
+              Searching campus stories...
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={results}
+            renderItem={({ item }) => (
+              <ConfessionCard
+                item={item}
+                onToggleLike={
+                  handleToggleLike
+                }
+                onToggleSave={
+                  handleToggleSave
+                }
+              />
+            )}
+            keyExtractor={(item) =>
+              item.id.toString()
+            }
+            contentContainerStyle={{
+              paddingHorizontal: 14,
+              paddingTop: 8,
+              paddingBottom: 110,
+            }}
+            showsVerticalScrollIndicator={
+              false
+            }
+            keyboardShouldPersistTaps="handled"
+            ListEmptyComponent={
+              <View className="items-center px-8 pt-[70px]">
+
+                <View className="h-[72px] w-[72px] items-center justify-center rounded-[24px] border border-[#27272A] bg-[#141416]">
+                  <Text className="text-[28px] text-[#EAB308]">
+                    ⌕
+                  </Text>
+                </View>
+
+                <Text className="mt-5 text-[18px] font-extrabold text-[#F4F4F5]">
+                  No stories found
+                </Text>
+
+                <Text className="mt-2 text-center text-[13px] leading-[20px] text-[#71717A]">
+                  Try different keywords,
+                  hashtags, or categories to
+                  discover more from your
+                  campus.
+                </Text>
+
+                {(selectedTag !== null ||
+                  selectedCategory !==
+                    null ||
+                  query.trim()) && (
+                  <TouchableOpacity
+                    onPress={() => {
+                      setQuery("");
+                      setSelectedTag(
+                        null
+                      );
+                      setSelectedCategory(
+                        null
+                      );
+                    }}
+                    activeOpacity={0.8}
+                    className="mt-5 rounded-full bg-[#EAB308] px-5 py-2.5"
+                  >
+                    <Text className="text-[12px] font-extrabold text-[#09090B]">
+                      Reset Search
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            }
+          />
+        )}
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0A0A0C" },
-  header: { padding: 16, backgroundColor: "#16161A", borderBottomWidth: 1, borderBottomColor: "#27272A" },
-  searchInput: {
-    height: 48,
-    backgroundColor: "#0A0A0C",
-    borderWidth: 1,
-    borderColor: "#27272A",
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    fontSize: 15,
-    color: "#F4F4F5",
-  },
-  sectionContainer: { backgroundColor: "#16161A", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#27272A" },
-  sectionTitle: { fontSize: 12, fontWeight: "700", color: "#A1A1AA", paddingHorizontal: 16, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 },
-  chipRow: { paddingHorizontal: 12 },
-  tagChip: {
-    backgroundColor: "#27272A",
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 16,
-    marginHorizontal: 4,
-    borderWidth: 1,
-    borderColor: "#3F3F46",
-  },
-  tagChipActive: { backgroundColor: "#EAB308", borderColor: "#EAB308" },
-  tagText: { fontSize: 13, fontWeight: "600", color: "#D4D4D8" },
-  tagTextActive: { color: "#0A0A0C", fontWeight: "800" },
-  categoryChip: {
-    backgroundColor: "#27272A",
-    paddingHorizontal: 16,
-    paddingVertical: 7,
-    borderRadius: 20,
-    marginHorizontal: 4,
-    borderWidth: 1,
-    borderColor: "#3F3F46",
-  },
-  categoryChipActive: { backgroundColor: "#EAB308", borderColor: "#EAB308" },
-  categoryText: { fontSize: 13, fontWeight: "600", color: "#D4D4D8" },
-  categoryTextActive: { color: "#0A0A0C", fontWeight: "800" },
-  listContent: { padding: 14, paddingBottom: 110 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  empty: { alignItems: "center", paddingTop: 60, paddingHorizontal: 30 },
-  emptyTitle: { fontSize: 18, fontWeight: "700", color: "#F4F4F5" },
-  emptyText: { color: "#A1A1AA", textAlign: "center", marginTop: 8, lineHeight: 20 },
-});

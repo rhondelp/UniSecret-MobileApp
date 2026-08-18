@@ -1,8 +1,12 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
+
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   Image,
 } from "react-native";
@@ -12,33 +16,48 @@ import {
   ReactionType,
   getReactors,
   ReactionUser,
+  normalizeImageUrl,
 } from "../src/api/confessionApi";
 
 import { ReactionPicker } from "./ReactionPicker";
 
 type ConfessionCardProps = {
   item: Confession;
-  onToggleLike: (item: Confession) => void;
+
+  onToggleLike: (
+    item: Confession
+  ) => void;
+
   onSelectReaction?: (
     item: Confession,
     type: ReactionType
   ) => void;
-  onToggleSave: (item: Confession) => void;
+
+  onToggleSave: (
+    item: Confession
+  ) => void;
+
   onPressReactionsCount?: (
     item: Confession
   ) => void;
+
   onPressComment?: (
     item: Confession
   ) => void;
+
   onPressShare?: (
     item: Confession
   ) => void;
+
   onPressTag?: (
     tag: string
   ) => void;
 };
 
-// Reaction type -> Emoji
+// ============================================================
+// REACTION MAP
+// ============================================================
+
 const EMOJI_MAP: Record<
   string | number,
   string
@@ -58,6 +77,10 @@ const EMOJI_MAP: Record<
   Cry: "😭",
 };
 
+// ============================================================
+// COMPONENT
+// ============================================================
+
 export const ConfessionCard: React.FC<
   ConfessionCardProps
 > = ({
@@ -69,38 +92,38 @@ export const ConfessionCard: React.FC<
   onPressComment,
   onPressShare,
 }) => {
-  const [showPicker, setShowPicker] =
-    useState(false);
+  const [
+    showPicker,
+    setShowPicker,
+  ] = useState(false);
 
   /**
-   * Reactors belonging to THIS confession.
+   * Reactors
    */
-  const [reactors, setReactors] = useState<
-    ReactionUser[]
-  >([]);
+  const [
+    reactors,
+    setReactors,
+  ] = useState<ReactionUser[]>([]);
 
-  const [loadingReactors, setLoadingReactors] =
-    useState(false);
+  const [
+    loadingReactors,
+    setLoadingReactors,
+  ] = useState(false);
 
-  /**
-   * Prevent an old API request from overwriting
-   * newer reaction data.
-   */
-  const [requestVersion, setRequestVersion] =
-    useState(0);
+  // ==========================================================
+  // IMAGE URL
+  // ==========================================================
 
-  /**
-   * Load the actual reactors for this confession.
-   */
-  const loadReactors = useCallback(
-    async () => {
-      const currentVersion =
-        requestVersion + 1;
+  const imageUrl = normalizeImageUrl(
+    item.imageUrl
+  );
 
-      setRequestVersion(
-        currentVersion
-      );
+  // ==========================================================
+  // LOAD REACTORS
+  // ==========================================================
 
+  const loadReactors =
+    useCallback(async () => {
       try {
         setLoadingReactors(true);
 
@@ -110,20 +133,11 @@ export const ConfessionCard: React.FC<
             "Confession"
           );
 
-        /**
-         * Only use this response if it is
-         * still the newest request.
-         */
-        if (
-          currentVersion ===
-          requestVersion + 1
-        ) {
-          setReactors(
-            Array.isArray(response)
-              ? response
-              : []
-          );
-        }
+        setReactors(
+          Array.isArray(response)
+            ? response
+            : []
+        );
       } catch (error) {
         console.error(
           "Failed to load reactors:",
@@ -132,46 +146,35 @@ export const ConfessionCard: React.FC<
       } finally {
         setLoadingReactors(false);
       }
-    },
-    [
-      item.id,
-      requestVersion,
-    ]
-  );
+    }, [item.id]);
 
-  /**
-   * Initial load.
-   */
+  // ==========================================================
+  // INITIAL REACTOR LOAD
+  // ==========================================================
+
   useEffect(() => {
     loadReactors();
-  }, [item.id]);
+  }, [loadReactors]);
 
-  /**
-   * IMPORTANT:
-   *
-   * When the parent updates:
-   *
-   * likesCount
-   * userReaction
-   *
-   * reload the reactors.
-   *
-   * This is what makes the emoji list
-   * automatically update after a reaction.
-   */
+  // ==========================================================
+  // REFRESH WHEN REACTION STATE CHANGES
+  // ==========================================================
+
   useEffect(() => {
     if (item.id) {
       loadReactors();
     }
   }, [
+    item.id,
     item.likesCount,
     item.userReaction,
+    loadReactors,
   ]);
 
-  /**
-   * Get UNIQUE emojis actually used
-   * by reactors on this confession.
-   */
+  // ==========================================================
+  // GET UNIQUE REACTION EMOJIS
+  // ==========================================================
+
   const getDisplayEmojis =
     useCallback(() => {
       const uniqueTypes =
@@ -180,10 +183,8 @@ export const ConfessionCard: React.FC<
       reactors.forEach(
         (reactor) => {
           if (
-            reactor.type !==
-              null &&
-            reactor.type !==
-              undefined
+            reactor.type !== null &&
+            reactor.type !== undefined
           ) {
             uniqueTypes.add(
               reactor.type
@@ -192,10 +193,13 @@ export const ConfessionCard: React.FC<
         }
       );
 
-      return Array.from(uniqueTypes)
+      return Array.from(
+        uniqueTypes
+      )
         .map(
           (type) =>
-            EMOJI_MAP[type] || ""
+            EMOJI_MAP[type] ||
+            ""
         )
         .filter(Boolean)
         .join("");
@@ -204,12 +208,10 @@ export const ConfessionCard: React.FC<
   const displayEmojis =
     getDisplayEmojis();
 
-  /**
-   * TOTAL REACTIONS
-   *
-   * Never replace this with the number
-   * of unique emojis.
-   */
+  // ==========================================================
+  // COUNTS / STATE
+  // ==========================================================
+
   const totalReactions =
     item.likesCount || 0;
 
@@ -217,49 +219,40 @@ export const ConfessionCard: React.FC<
     item.isLiked ||
     item.userReaction != null;
 
-  /**
-   * When selecting a reaction:
-   *
-   * 1. Close picker
-   * 2. Tell parent to change reaction
-   * 3. Refresh actual reactors
-   */
-  const handlePickReaction = async (
-    type: ReactionType
-  ) => {
-    setShowPicker(false);
+  // ==========================================================
+  // PICK REACTION
+  // ==========================================================
 
-    if (onSelectReaction) {
-      await Promise.resolve(
-        onSelectReaction(
-          item,
-          type
-        )
-      );
+  const handlePickReaction =
+    async (
+      type: ReactionType
+    ) => {
+      setShowPicker(false);
 
-      /**
-       * Give the backend mutation a chance
-       * to complete before retrieving the
-       * updated reactor list.
-       */
-      setTimeout(() => {
-        loadReactors();
-      }, 250);
-    } else {
-      onToggleLike(item);
+      if (onSelectReaction) {
+        await Promise.resolve(
+          onSelectReaction(
+            item,
+            type
+          )
+        );
 
-      setTimeout(() => {
-        loadReactors();
-      }, 250);
-    }
-  };
+        setTimeout(() => {
+          loadReactors();
+        }, 250);
+      } else {
+        onToggleLike(item);
 
-  /**
-   * Normal Like button.
-   *
-   * Refresh reactor emojis after the
-   * reaction has been changed.
-   */
+        setTimeout(() => {
+          loadReactors();
+        }, 250);
+      }
+    };
+
+  // ==========================================================
+  // NORMAL LIKE
+  // ==========================================================
+
   const handleToggleLike =
     async () => {
       if (showPicker) {
@@ -274,262 +267,410 @@ export const ConfessionCard: React.FC<
       }, 250);
     };
 
+  // ==========================================================
+  // AVATAR LETTER
+  // ==========================================================
+
+  const avatarLetter =
+    item.isAnonymous
+      ? "?"
+      : (
+          item.user?.name ||
+          item.authorName ||
+          "A"
+        )
+          .charAt(0)
+          .toUpperCase();
+
+  // ==========================================================
+  // DISPLAY NAME
+  // ==========================================================
+
+  const displayName =
+    item.isAnonymous
+      ? "Anonymous Student"
+      : item.user?.name ||
+        item.authorName ||
+        "Anonymous User";
+
+  // ==========================================================
+  // CATEGORY NAME
+  // ==========================================================
+
+  /*
+   * Your API response is:
+   *
+   * categoryName: "Love"
+   *
+   * not:
+   *
+   * category: {
+   *   name: "Love"
+   * }
+   *
+   * Support both.
+   */
+  const categoryName =
+    item.categoryName ||
+    item.category?.name ||
+    null;
+
+  // ==========================================================
+  // USER REACTION EMOJI
+  // ==========================================================
+
+  const activeReaction =
+    item.userReaction !==
+      null &&
+    item.userReaction !==
+      undefined
+      ? EMOJI_MAP[
+          item.userReaction
+        ] || "♥"
+      : "♥";
+
+  // ==========================================================
+  // IMAGE ERROR
+  // ==========================================================
+
+  const handleImageError =
+    (event: any) => {
+      console.error(
+        "CONFESSION IMAGE FAILED:",
+        imageUrl
+      );
+
+      console.error(
+        "IMAGE ERROR:",
+        event?.nativeEvent
+      );
+    };
+
+  // ==========================================================
+  // IMAGE LOAD
+  // ==========================================================
+
+  const handleImageLoad = () => {
+    console.log(
+      "CONFESSION IMAGE LOADED:",
+      imageUrl
+    );
+  };
+
+  // ==========================================================
+  // UI
+  // ==========================================================
+
   return (
-    <View style={styles.card}>
-      {/* CARD HEADER */}
-      <View style={styles.cardHeader}>
-        <View style={styles.avatar}>
-          <Text
-            style={
-              styles.avatarText
-            }
-          >
-            {item.isAnonymous
-              ? "?"
-              : (
-                  item.user?.name ||
-                  item.authorName ||
-                  "A"
-                )
-                  .charAt(0)
-                  .toUpperCase()}
-          </Text>
-        </View>
+    <View className="relative mb-4 overflow-visible rounded-[22px] border border-[#242428] bg-[#131315]">
 
-        <View style={styles.userInfo}>
-          <Text
-            style={
-              styles.userName
-            }
-          >
-            {item.isAnonymous
-              ? "Anonymous Student"
-              : item.user?.name ||
-                item.authorName ||
-                "Anonymous User"}
-          </Text>
+      {/* ======================================================
+          TOP ACCENT
+      ====================================================== */}
 
-          <Text style={styles.time}>
-            {formatDate(
-              item.createdAt
-            )}
-          </Text>
-        </View>
+      <View className="absolute left-0 right-0 top-0 h-[2px] rounded-full bg-[#EAB308]" />
 
-        <TouchableOpacity
-          activeOpacity={0.6}
-        >
-          <Text style={styles.more}>
-            •••
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* ======================================================
+          CARD CONTENT
+      ====================================================== */}
 
-      {/* CATEGORY */}
-      {item.category?.name && (
-        <View
-          style={
-            styles.categoryBadge
-          }
-        >
-          <Text
-            style={
-              styles.categoryText
-            }
-          >
-            {item.category.name}
-          </Text>
-        </View>
-      )}
+      <View className="p-[17px]">
 
-      {/* BODY */}
-      <Text style={styles.body}>
-        {item.body}
-      </Text>
+        {/* ====================================================
+            HEADER
+        ==================================================== */}
 
-      {/* IMAGE */}
-      {item.imageUrl ? (
-        <Image
-          source={{
-            uri: item.imageUrl,
-          }}
-          style={
-            styles.postImage
-          }
-          resizeMode="cover"
-        />
-      ) : null}
+        <View className="flex-row items-center">
 
-      {/* REACTION SUMMARY */}
-      {totalReactions > 0 && (
-        <TouchableOpacity
-          style={
-            styles.reactionSummaryRow
-          }
-          onPress={() =>
-            onPressReactionsCount?.(
-              item
-            )
-          }
-          activeOpacity={0.7}
-        >
-          <Text
-            style={
-              styles.reactionSummaryText
-            }
-          >
-            {displayEmojis && (
-              <Text>
-                {displayEmojis}{" "}
+          {/* AVATAR */}
+
+          <View className="h-[45px] w-[45px] items-center justify-center rounded-[15px] border border-[#3A3A3F] bg-[#242428]">
+
+            <Text className="text-[17px] font-black text-[#EAB308]">
+              {avatarLetter}
+            </Text>
+
+          </View>
+
+          {/* USER INFO */}
+
+          <View className="ml-3 flex-1">
+
+            <View className="flex-row items-center">
+
+              <Text
+                numberOfLines={1}
+                className="max-w-[190px] text-[14px] font-bold text-[#F4F4F5]"
+              >
+                {displayName}
               </Text>
+
+              {item.isAnonymous && (
+                <View className="ml-2 rounded-full bg-[#211F16] px-2 py-[3px]">
+                  <Text className="text-[9px] font-bold uppercase tracking-[0.5px] text-[#EAB308]">
+                    Anonymous
+                  </Text>
+                </View>
+              )}
+
+            </View>
+
+            <Text className="mt-1 text-[11px] text-[#68686F]">
+              {formatDate(
+                item.createdAt
+              )}
+            </Text>
+
+          </View>
+
+          {/* MORE */}
+
+          <TouchableOpacity
+            activeOpacity={0.65}
+            className="h-9 w-9 items-center justify-center rounded-full"
+          >
+            <Text className="text-[17px] font-bold tracking-[2px] text-[#6B6B73]">
+              •••
+            </Text>
+          </TouchableOpacity>
+
+        </View>
+
+        {/* ====================================================
+            CATEGORY
+        ==================================================== */}
+
+        {categoryName && (
+          <TouchableOpacity
+            activeOpacity={0.75}
+            className="mt-4 self-start rounded-full border border-[#3B3825] bg-[#211F16] px-3 py-[6px]"
+          >
+            <Text className="text-[10px] font-extrabold uppercase tracking-[0.7px] text-[#EAB308]">
+              {categoryName}
+            </Text>
+          </TouchableOpacity>
+        )}
+
+        {/* ====================================================
+            BODY
+        ==================================================== */}
+
+        <Text className="mt-4 text-[15px] leading-[24px] text-[#D4D4D8]">
+          {item.body}
+        </Text>
+
+        {/* ====================================================
+            IMAGE
+        ==================================================== */}
+
+        {imageUrl ? (
+          <View className="mt-4 overflow-hidden rounded-[17px] border border-[#29292D] bg-[#0F0F11]">
+
+            <Image
+              source={{
+                uri: imageUrl,
+              }}
+              className="h-[225px] w-full"
+              resizeMode="cover"
+              onLoad={handleImageLoad}
+              onError={handleImageError}
+            />
+
+          </View>
+        ) : null}
+
+        {/* ====================================================
+            REACTION SUMMARY
+        ==================================================== */}
+
+        {totalReactions > 0 && (
+          <TouchableOpacity
+            className="mt-4 flex-row items-center"
+            onPress={() =>
+              onPressReactionsCount?.(
+                item
+              )
+            }
+            activeOpacity={0.7}
+          >
+
+            {displayEmojis && (
+              <View className="mr-2 flex-row items-center rounded-full border border-[#303034] bg-[#1B1B1F] px-2 py-1">
+
+                <Text className="text-[12px]">
+                  {displayEmojis}
+                </Text>
+
+              </View>
             )}
 
-            {totalReactions}{" "}
-            {totalReactions === 1
-              ? "Reaction"
-              : "Reactions"}
-          </Text>
-        </TouchableOpacity>
-      )}
+            <Text className="text-[11px] font-semibold text-[#85858D]">
+              {totalReactions}{" "}
+              {totalReactions === 1
+                ? "reaction"
+                : "reactions"}
+            </Text>
 
-      {/* REACTION PICKER */}
-      {showPicker && (
-        <View
-          style={
-            styles.pickerWrapper
-          }
-        >
-          <ReactionPicker
-            onSelectReaction={
-              handlePickReaction
+          </TouchableOpacity>
+        )}
+
+        {/* ====================================================
+            REACTION PICKER
+        ==================================================== */}
+
+        {showPicker && (
+          <View className="absolute bottom-[67px] left-4 z-50">
+
+            <ReactionPicker
+              onSelectReaction={
+                handlePickReaction
+              }
+            />
+
+          </View>
+        )}
+
+        {/* ====================================================
+            ACTION BAR
+        ==================================================== */}
+
+        <View className="mt-4 flex-row items-center border-t border-[#242428] pt-3">
+
+          {/* ==================================================
+              LIKE / REACTION
+          ================================================== */}
+
+          <TouchableOpacity
+            onPress={
+              handleToggleLike
             }
-          />
+            onLongPress={() =>
+              setShowPicker(
+                !showPicker
+              )
+            }
+            delayLongPress={250}
+            activeOpacity={0.7}
+            className={`mr-2 flex-row items-center rounded-full px-3 py-2 ${
+              isLikedActive
+                ? "bg-[#211F16]"
+                : "bg-[#1A1A1D]"
+            }`}
+          >
+
+            <Text className="text-[17px]">
+              {isLikedActive
+                ? activeReaction
+                : "♡"}
+            </Text>
+
+            <Text
+              className={`ml-1.5 text-[11px] ${
+                isLikedActive
+                  ? "font-extrabold text-[#EAB308]"
+                  : "font-semibold text-[#85858D]"
+              }`}
+            >
+              {totalReactions}
+            </Text>
+
+          </TouchableOpacity>
+
+          {/* ==================================================
+              COMMENT
+          ================================================== */}
+
+          <TouchableOpacity
+            className="mr-2 flex-row items-center rounded-full bg-[#1A1A1D] px-3 py-2"
+            onPress={() =>
+              onPressComment?.(
+                item
+              )
+            }
+            activeOpacity={0.7}
+          >
+
+            <Text className="text-[15px]">
+              💬
+            </Text>
+
+            <Text className="ml-1.5 text-[11px] font-semibold text-[#85858D]">
+              Comment
+            </Text>
+
+          </TouchableOpacity>
+
+          {/* ==================================================
+              SHARE
+          ================================================== */}
+
+          <TouchableOpacity
+            className="flex-row items-center rounded-full bg-[#1A1A1D] px-3 py-2"
+            onPress={() =>
+              onPressShare?.(
+                item
+              )
+            }
+            activeOpacity={0.7}
+          >
+
+            <Text className="text-[16px] text-[#85858D]">
+              ↗
+            </Text>
+
+            <Text className="ml-1.5 text-[11px] font-semibold text-[#85858D]">
+              Share
+            </Text>
+
+          </TouchableOpacity>
+
+          {/* ==================================================
+              SAVE
+          ================================================== */}
+
+          <TouchableOpacity
+            className={`ml-auto h-[37px] w-[37px] items-center justify-center rounded-full ${
+              item.isSaved
+                ? "bg-[#211F16]"
+                : "bg-[#1A1A1D]"
+            }`}
+            onPress={() =>
+              onToggleSave(item)
+            }
+            activeOpacity={0.7}
+          >
+
+            <Text
+              className={`text-[18px] ${
+                item.isSaved
+                  ? "text-[#EAB308]"
+                  : "text-[#77777F]"
+              }`}
+            >
+              {item.isSaved
+                ? "★"
+                : "☆"}
+            </Text>
+
+          </TouchableOpacity>
+
         </View>
-      )}
 
-      {/* ACTIONS */}
-      <View style={styles.actions}>
-        {/* REACTION BUTTON */}
-        <TouchableOpacity
-          style={
-            styles.actionButton
-          }
-          onPress={
-            handleToggleLike
-          }
-          onLongPress={() =>
-            setShowPicker(
-              !showPicker
-            )
-          }
-          delayLongPress={250}
-          activeOpacity={0.7}
-        >
-          <Text
-            style={[
-              styles.actionIcon,
-              isLikedActive &&
-                styles.actionIconActive,
-            ]}
-          >
-            {isLikedActive
-              ? item.userReaction
-                ? EMOJI_MAP[
-                    item.userReaction
-                  ] || "♥"
-                : "♥"
-              : "♡"}
-          </Text>
-
-          {/* TOTAL COUNT */}
-          <Text
-            style={[
-              styles.actionText,
-              isLikedActive &&
-                styles.actionTextActive,
-            ]}
-          >
-            {totalReactions}
-          </Text>
-        </TouchableOpacity>
-
-        {/* COMMENT */}
-        <TouchableOpacity
-          style={
-            styles.actionButton
-          }
-          onPress={() =>
-            onPressComment?.(item)
-          }
-          activeOpacity={0.7}
-        >
-          <Text
-            style={styles.actionIcon}
-          >
-            💬
-          </Text>
-
-          <Text
-            style={styles.actionText}
-          >
-            Comment
-          </Text>
-        </TouchableOpacity>
-
-        {/* SHARE */}
-        <TouchableOpacity
-          style={
-            styles.actionButton
-          }
-          onPress={() =>
-            onPressShare?.(item)
-          }
-          activeOpacity={0.7}
-        >
-          <Text
-            style={styles.actionIcon}
-          >
-            ↗
-          </Text>
-
-          <Text
-            style={styles.actionText}
-          >
-            Share
-          </Text>
-        </TouchableOpacity>
-
-        {/* SAVE */}
-        <TouchableOpacity
-          style={
-            styles.actionButtonRight
-          }
-          onPress={() =>
-            onToggleSave(item)
-          }
-          activeOpacity={0.7}
-        >
-          <Text
-            style={[
-              styles.actionIcon,
-              item.isSaved &&
-                styles.actionIconActive,
-            ]}
-          >
-            {item.isSaved
-              ? "★"
-              : "☆"}
-          </Text>
-        </TouchableOpacity>
       </View>
     </View>
   );
 };
 
+// ============================================================
+// DATE FORMATTER
+// ============================================================
+
 function formatDate(
   dateString: string
 ) {
-  if (!dateString) return "";
+  if (!dateString) {
+    return "";
+  }
 
   const date = new Date(
     dateString
@@ -543,153 +684,12 @@ function formatDate(
     return "";
   }
 
-  return date.toLocaleDateString();
+  return date.toLocaleDateString(
+    undefined,
+    {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    }
+  );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: "#16161A",
-    borderRadius: 20,
-    padding: 18,
-    marginBottom: 14,
-    borderWidth: 1,
-    borderColor: "#27272A",
-    position: "relative",
-  },
-
-  cardHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  avatar: {
-    width: 42,
-    height: 42,
-    borderRadius: 14,
-    backgroundColor: "#27272A",
-    borderWidth: 1,
-    borderColor: "#3F3F46",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  avatarText: {
-    color: "#EAB308",
-    fontSize: 18,
-    fontWeight: "800",
-  },
-
-  userInfo: {
-    flex: 1,
-    marginLeft: 12,
-  },
-
-  userName: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#F4F4F5",
-  },
-
-  time: {
-    marginTop: 2,
-    fontSize: 11,
-    color: "#71717A",
-  },
-
-  more: {
-    fontSize: 16,
-    color: "#71717A",
-    letterSpacing: 2,
-  },
-
-  categoryBadge: {
-    alignSelf: "flex-start",
-    backgroundColor: "#27272A",
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    marginTop: 12,
-    borderWidth: 1,
-    borderColor: "#3F3F46",
-  },
-
-  categoryText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#EAB308",
-  },
-
-  body: {
-    color: "#D4D4D8",
-    fontSize: 15,
-    lineHeight: 23,
-    marginTop: 12,
-  },
-
-  postImage: {
-    width: "100%",
-    height: 220,
-    borderRadius: 14,
-    marginTop: 14,
-  },
-
-  reactionSummaryRow: {
-    marginTop: 12,
-    paddingTop: 8,
-  },
-
-  reactionSummaryText: {
-    fontSize: 13,
-    color: "#A1A1AA",
-    fontWeight: "600",
-  },
-
-  pickerWrapper: {
-    position: "absolute",
-    bottom: 50,
-    left: 16,
-    zIndex: 10,
-  },
-
-  actions: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    borderTopWidth: 1,
-    borderTopColor: "#27272A",
-    marginTop: 14,
-    paddingTop: 12,
-  },
-
-  actionButton: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-
-  actionButtonRight: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginLeft: "auto",
-  },
-
-  actionIcon: {
-    fontSize: 18,
-    color: "#A1A1AA",
-    marginRight: 6,
-  },
-
-  actionIconActive: {
-    color: "#EAB308",
-  },
-
-  actionText: {
-    color: "#A1A1AA",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
-  actionTextActive: {
-    color: "#EAB308",
-    fontWeight: "800",
-  },
-});
